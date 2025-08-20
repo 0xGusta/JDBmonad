@@ -1,19 +1,494 @@
-export const CONTRACT_ADDRESS = "0x2713679384F14c5c0300484320e4B9E5077e155A";
+export const CONTRACT_ADDRESS = "0xcE6f6b0CB72C72F8B54a8f3480C01CCe9c9CBFA5";
 
-export const CONTRACT_ABI = [
+export const LEADERBOARD_ADDRESS = "0xceCBFF203C8B6044F52CE23D914A1bfD997541A4";
+
+export const LEADERBOARD_ABI = [
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "AccessControlBadConfirmation",
+		"type": "error"
+	},
 	{
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_newAdmin",
+				"name": "account",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "neededRole",
+				"type": "bytes32"
+			}
+		],
+		"name": "AccessControlUnauthorizedAccount",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "game",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "image",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "url",
+				"type": "string"
+			}
+		],
+		"name": "GameRegistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "game",
 				"type": "address"
 			}
 		],
-		"name": "addAdmin",
+		"name": "GameUnregistered",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "game",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "scoreAmount",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "transactionAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "PlayerDataUpdated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "previousAdminRole",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "newAdminRole",
+				"type": "bytes32"
+			}
+		],
+		"name": "RoleAdminChanged",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			}
+		],
+		"name": "RoleGranted",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "sender",
+				"type": "address"
+			}
+		],
+		"name": "RoleRevoked",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "DEFAULT_ADMIN_ROLE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "GAME_ROLE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "games",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "game",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "image",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "url",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			}
+		],
+		"name": "getRoleAdmin",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "grantRole",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "hasRole",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "playerDataPerGame",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "score",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "transactions",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_game",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_name",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_image",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_url",
+				"type": "string"
+			}
+		],
+		"name": "registerGame",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "callerConfirmation",
+				"type": "address"
+			}
+		],
+		"name": "renounceRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "role",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "account",
+				"type": "address"
+			}
+		],
+		"name": "revokeRole",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes4",
+				"name": "interfaceId",
+				"type": "bytes4"
+			}
+		],
+		"name": "supportsInterface",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "totalScoreOfPlayer",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "totalTransactionsOfPlayer",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "game",
+				"type": "address"
+			}
+		],
+		"name": "unregisterGame",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "scoreAmount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "transactionAmount",
+				"type": "uint256"
+			}
+		],
+		"name": "updatePlayerData",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	}
+];
+
+export const CONTRACT_ABI = [
 	{
 		"inputs": [],
 		"stateMutability": "nonpayable",
@@ -101,6 +576,25 @@ export const CONTRACT_ABI = [
 		"inputs": [
 			{
 				"indexed": true,
+				"internalType": "uint64",
+				"name": "sequenceNumber",
+				"type": "uint64"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "admin",
+				"type": "address"
+			}
+		],
+		"name": "DrawCancelled",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
 				"internalType": "uint256",
 				"name": "drawId",
 				"type": "uint256"
@@ -125,6 +619,25 @@ export const CONTRACT_ABI = [
 		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": true,
+				"internalType": "uint64",
+				"name": "sequenceNumber",
+				"type": "uint64"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "admin",
+				"type": "address"
+			}
+		],
+		"name": "DrawProcessed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
 				"indexed": false,
 				"internalType": "uint256",
 				"name": "numberHit",
@@ -139,24 +652,6 @@ export const CONTRACT_ABI = [
 		],
 		"name": "PercentagesChanged",
 		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256[]",
-				"name": "_numbers",
-				"type": "uint256[]"
-			},
-			{
-				"internalType": "string[]",
-				"name": "_animalNames",
-				"type": "string[]"
-			}
-		],
-		"name": "placeBets",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -178,11 +673,42 @@ export const CONTRACT_ABI = [
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "refundAllBets",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint64",
+				"name": "sequenceNumber",
+				"type": "uint64"
+			},
+			{
+				"indexed": false,
+				"internalType": "bytes32",
+				"name": "randomNumber",
+				"type": "bytes32"
+			}
+		],
+		"name": "RandomNumberFulfilled",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint64",
+				"name": "sequenceNumber",
+				"type": "uint64"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "drawId",
+				"type": "uint256"
+			}
+		],
+		"name": "RandomNumberRequested",
+		"type": "event"
 	},
 	{
 		"anonymous": false,
@@ -204,66 +730,63 @@ export const CONTRACT_ABI = [
 		"type": "event"
 	},
 	{
+		"inputs": [],
+		"name": "MIN_CANCEL_WAIT_TIME",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint64",
+				"name": "sequence",
+				"type": "uint64"
+			},
+			{
+				"internalType": "address",
+				"name": "provider",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "randomNumber",
+				"type": "bytes32"
+			}
+		],
+		"name": "_entropyCallback",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "activeSequenceNumber",
+		"outputs": [
+			{
+				"internalType": "uint64",
+				"name": "",
+				"type": "uint64"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "_adminToRemove",
+				"name": "_newAdmin",
 				"type": "address"
 			}
 		],
-		"name": "removeAdmin",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_newPriceInWei",
-				"type": "uint256"
-			}
-		],
-		"name": "setBetPrice",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_numberHit",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_animalHit",
-				"type": "uint256"
-			}
-		],
-		"name": "setPercentages",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "togglePause",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "triggerDraw",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawPrize",
+		"name": "addAdmin",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -282,6 +805,25 @@ export const CONTRACT_ABI = [
 				"internalType": "bool",
 				"name": "",
 				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "allTimePlayers",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
 			}
 		],
 		"stateMutability": "view",
@@ -340,6 +882,38 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [
 			{
+				"internalType": "uint64",
+				"name": "_sequenceNumber",
+				"type": "uint64"
+			}
+		],
+		"name": "cancelFailedDraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "currentRoundPlayers",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
@@ -371,6 +945,19 @@ export const CONTRACT_ABI = [
 				"internalType": "uint256",
 				"name": "totalPot",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllTimePlayers",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "",
+				"type": "address[]"
 			}
 		],
 		"stateMutability": "view",
@@ -452,7 +1039,7 @@ export const CONTRACT_ABI = [
 								"type": "uint256"
 							}
 						],
-						"internalType": "struct MonBicho_GameJam_Edition.Winner[]",
+						"internalType": "struct JDB.Winner[]",
 						"name": "numberWinners",
 						"type": "tuple[]"
 					},
@@ -469,14 +1056,125 @@ export const CONTRACT_ABI = [
 								"type": "uint256"
 							}
 						],
-						"internalType": "struct MonBicho_GameJam_Edition.Winner[]",
+						"internalType": "struct JDB.Winner[]",
 						"name": "animalWinners",
 						"type": "tuple[]"
 					}
 				],
-				"internalType": "struct MonBicho_GameJam_Edition.Draw[]",
+				"internalType": "struct JDB.Draw[]",
 				"name": "",
 				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getFullStatus",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "bool",
+						"name": "isPaused",
+						"type": "bool"
+					},
+					{
+						"internalType": "string",
+						"name": "statusString",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "nextDrawId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint64",
+						"name": "activeSequenceNumber",
+						"type": "uint64"
+					},
+					{
+						"internalType": "uint256",
+						"name": "pendingDrawTimestamp",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "currentPot",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "betPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "hasBetsPlaced",
+						"type": "bool"
+					},
+					{
+						"internalType": "bool",
+						"name": "isRandomNumberFulfilled",
+						"type": "bool"
+					}
+				],
+				"internalType": "struct JDB.FullStatus",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPythFee",
+		"outputs": [
+			{
+				"internalType": "uint128",
+				"name": "",
+				"type": "uint128"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "hasBetInCurrentRound",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "hasEverPlayed",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -559,6 +1257,62 @@ export const CONTRACT_ABI = [
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "pause",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint64",
+				"name": "",
+				"type": "uint64"
+			}
+		],
+		"name": "pendingDraws",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "totalPot",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "numberHitPot",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "animalHitPot",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "requestTimestamp",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "exists",
+				"type": "bool"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "randomNumber",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bool",
+				"name": "isFulfilled",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -575,6 +1329,38 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "_numbers",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "_animalNames",
+				"type": "string[]"
+			}
+		],
+		"name": "placeBets",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "processDraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "refundAllBets",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -602,6 +1388,50 @@ export const CONTRACT_ABI = [
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_adminToRemove",
+				"type": "address"
+			}
+		],
+		"name": "removeAdmin",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_newPriceInWei",
+				"type": "uint256"
+			}
+		],
+		"name": "setBetPrice",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_numberHit",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_animalHit",
+				"type": "uint256"
+			}
+		],
+		"name": "setPercentages",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "totalPendingWithdrawals",
 		"outputs": [
@@ -612,6 +1442,27 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "triggerDraw",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "unpause",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "withdrawPrize",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ];

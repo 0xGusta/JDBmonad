@@ -8,9 +8,11 @@ const History = ({ history }) => {
         return <p>Ainda não há sorteios no histórico.</p>;
     }
 
+    const sortedHistory = [...history].sort((a, b) => Number(b.id) - Number(a.id));
+
     return (
         <div className="history-list">
-            {history.map((draw) => (
+            {sortedHistory.map((draw) => (
                 <div key={draw.id.toString()} className="history-item">
                     <h4>Sorteio #{draw.id.toString()} - {new Date(Number(draw.timestamp) * 1000).toLocaleString()}</h4>
                     <p>

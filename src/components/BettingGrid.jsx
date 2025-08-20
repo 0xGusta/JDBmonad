@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { parseEther } from "ethers";
 
 const animals = [
     { name: "Monlandak", numbers: [0, 1, 2, 3, 4, 5], img: "/images/placeholder.png" },
@@ -19,7 +20,8 @@ const animals = [
     { name: "MonCoringa", numbers: [90, 91, 92, 93, 94, 95], img: "/images/placeholder.png" },
 ];
 
-const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated }) => {
+
+const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated, addNotification, walletBalance }) => {
     const [selectedNumbers, setSelectedNumbers] = useState(new Set());
     const [selectedAnimals, setSelectedAnimals] = useState(new Set());
 
@@ -36,36 +38,38 @@ const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated }) => {
         else newSelection.add(animalName);
         setSelectedAnimals(newSelection);
     };
-    
+
     const handleBet = () => {
         if (!isAuthenticated) {
             onPlaceBet([], []);
             return;
         }
         if (selectedNumbers.size === 0 && selectedAnimals.size === 0) {
-            return alert("Selecione números ou animais para apostar.");
+            addNotification("Selecione números ou animais para apostar.", 'error');
+            return;
         }
         onPlaceBet(Array.from(selectedNumbers), Array.from(selectedAnimals));
     };
 
     const totalSelections = selectedNumbers.size + selectedAnimals.size;
-    const totalCost = (totalSelections * parseFloat(betPrice)).toFixed(4);
+    const totalCost = totalSelections * parseFloat(betPrice);
+    const hasSufficientBalance = isAuthenticated ? parseEther(walletBalance || '0') >= parseEther(totalCost.toString()) : false;
 
     return (
         <div className="card game-card">
-            <h2>Escolha seus MonAnimals e/ou Números</h2>
-            <p>Preço por seleção: <strong>{betPrice} MON</strong></p>
-            
+            <h2 style={{textAlign: 'center', marginBottom: '0.5rem'}}>Faça sua Aposta</h2>
+            <p style={{textAlign: 'center', color: 'var(--text-secondary-color)'}}>Preço por seleção: <strong>{betPrice} MON</strong></p>
+
             <div className="betting-grid">
                 {animals.map(animal => (
                     <div className={`animal-card ${selectedAnimals.has(animal.name) ? 'selected-animal' : ''}`} key={animal.name}>
-                        <img 
-                            src={animal.img} 
-                            alt={animal.name} 
+                        <img
+                            src={animal.img}
+                            alt={animal.name}
                             className="animal-image"
                             onClick={() => toggleAnimal(animal.name)}
                         />
-                        <h3>{animal.name}</h3>
+                        <h3 className="animal-name">{animal.name}</h3>
                         <div className="number-grid">
                             {animal.numbers.map(num => (
                                 <button
@@ -81,11 +85,18 @@ const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated }) => {
                 ))}
             </div>
 
-            <button className="bet-button" onClick={handleBet} disabled={isAuthenticated && totalSelections === 0}>
-                {isAuthenticated ? 
-                    `Apostar ${totalSelections} Seleções (Custo: ${totalCost} MON)` :
-                    'Conectar Carteira para Apostar'
-                }
+            <div className="bet-summary">
+                <p>Seleções: <strong>{totalSelections}</strong></p>
+                <p>Custo Total: <strong>{totalCost.toFixed(2)} MON</strong></p>
+                <p>Saldo: <strong>{Number(walletBalance).toFixed(2)} MON</strong></p>
+            </div>
+
+            {!hasSufficientBalance && isAuthenticated && totalCost > 0 && (
+                <p style={{color: 'var(--danger-color)', textAlign: 'center', fontWeight: 'bold'}}>Saldo insuficiente.</p>
+            )}
+
+            <button className="bet-button" onClick={handleBet} disabled={isAuthenticated && (!hasSufficientBalance || totalSelections === 0)}>
+                {isAuthenticated ? `Apostar Agora` : 'Conectar Carteira para Apostar'}
             </button>
         </div>
     );

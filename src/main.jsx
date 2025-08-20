@@ -10,7 +10,6 @@ const privyAppId = 'cmdypcch1007ylh0bt9q9no9c';
 const monadGamesId = 'cmd8euall0037le0my79qpz42';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
     <PrivyProvider
       appId={privyAppId}
       config={{
@@ -27,5 +26,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     >
       <App />
     </PrivyProvider>
-  </React.StrictMode>,
 );
