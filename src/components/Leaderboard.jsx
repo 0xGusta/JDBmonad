@@ -3,7 +3,7 @@ import { Contract, WebSocketProvider } from "ethers";
 import { monadTestnet } from '../monadChain.js';
 import { LEADERBOARD_ADDRESS, LEADERBOARD_ABI } from '../contractInfo.js';
 
-const JDB_GAME_ADDRESS_FOR_LEADERBOARD = "0xa05313dE17342D044dd81F891dFc27aec94fC1e7";
+const JDB_GAME_ADDRESS_FOR_LEADERBOARD = "0x8cDdbc30cc9E4fe404EecD254056d9736f9Dc168";
 
 const Leaderboard = ({ provider, gameContract, leaderboardContract, yourAddress }) => {
     const [leaderboardData, setLeaderboardData] = useState([]);
