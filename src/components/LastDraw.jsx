@@ -25,10 +25,15 @@ const LastDraw = ({ lastDraw }) => {
                 </div>
                 <div className="detail-item">
                     <span>Prêmio Total </span>
-                    <strong>{formatEther(lastDraw.totalPot)} MON</strong>
+                    <strong>
+                    {new Intl.NumberFormat("en-US", { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                    }).format(formatEther(lastDraw.totalPot))} MON
+                    </strong>
                 </div>
                 <div className="detail-item">
-                    <span>{new Date(Number(lastDraw.timestamp) * 1000).toLocaleString()}</span>
+                    <span>{new Date(Number(lastDraw.timestamp) * 1000).toLocaleString('pt-BR')}</span> {/* para a data em formato ingles é 'en-US' */}
                 </div>
             </div>
         </div>
