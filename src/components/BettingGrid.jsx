@@ -58,8 +58,12 @@ const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated, addNotification, w
     return (
         <div className="card game-card">
             <h2 style={{textAlign: 'center', marginBottom: '0.5rem'}}>Faça sua Aposta</h2>
-            <p style={{textAlign: 'center', color: 'var(--text-secondary-color)'}}>Preço por seleção: <strong>{betPrice} MON</strong></p>
-
+            <p style={{textAlign: 'center', color: 'var(--text-secondary-color)'}}>Preço por seleção: <strong>{new Intl.NumberFormat("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+                }).format(Number(betPrice))} MON
+                </strong>
+            </p>
             <div className="betting-grid">
                 {animals.map(animal => (
                     <div className={`animal-card ${selectedAnimals.has(animal.name) ? 'selected-animal' : ''}`} key={animal.name}>
@@ -87,8 +91,12 @@ const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated, addNotification, w
 
             <div className="bet-summary">
                 <p>Seleções: <strong>{totalSelections}</strong></p>
-                <p>Custo Total: <strong>{totalCost.toFixed(2)} MON</strong></p>
-                <p>Saldo: <strong>{Number(walletBalance).toFixed(2)} MON</strong></p>
+                <p>
+                    Custo Total: <strong>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalCost)} MON</strong>
+                </p>
+                <p>
+                    Saldo: <strong>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(walletBalance)} MON</strong>
+                </p>
             </div>
 
             {!hasSufficientBalance && isAuthenticated && totalCost > 0 && (
