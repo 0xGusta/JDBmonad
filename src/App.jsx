@@ -374,7 +374,12 @@ function App() {
                 {authenticated && parseFloat(pendingPrize) > 0 && (
                     <div className="card withdraw-card">
                         <h3>Você tem um prêmio para sacar!</h3>
-                        <p className="pot-amount">{pendingPrize} MON</p>
+                        <p className="pot-amount">
+                          {parseFloat(pendingPrize).toLocaleString("en-US", { 
+                             minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                           })} MON
+                        </p>
                         <button onClick={handleWithdraw}>Sacar Meu Prêmio</button>
                     </div>
                 )}
