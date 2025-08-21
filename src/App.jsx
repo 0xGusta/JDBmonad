@@ -381,7 +381,12 @@ function App() {
                 <div className="stats-grid">
                     <div className="card pot-display">
                         <h2>Prêmio da Rodada Atual</h2>
-                        <p className="pot-amount">{currentPot} MON</p>
+                        <p className="pot-amount">
+                            {new Intl.NumberFormat("en-US", { 
+                                minimumFractionDigits: 2, 
+                                maximumFractionDigits: 2 
+                            }).format(Number(currentPot))} MON
+                        </p>
                     </div>
                     <LastDraw lastDraw={drawHistory[0]} />
                 </div>
