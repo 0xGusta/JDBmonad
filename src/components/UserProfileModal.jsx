@@ -35,7 +35,11 @@ const UserProfileModal = ({ isOpen, onClose, username, balance, address, onWithd
                 <div className="modal-body">
                     <div className="user-info">
                         <p><strong>{username}</strong></p>
-                        <p><strong>{Number(walletBalance).toFixed(2)} MON</strong></p>
+                        <p>
+                            <strong>
+                                {new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(walletBalance)} MON
+                            </strong>
+                        </p>
                     </div>
                     <div className="top-up-instructions">
                         <h4>Como adicionar fundos à sua carteira:</h4>

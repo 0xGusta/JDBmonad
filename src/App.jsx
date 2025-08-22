@@ -14,6 +14,8 @@ import Notification from './components/Notification.jsx';
 import LastDraw from './components/LastDraw.jsx';
 import BetNotification from './components/BetNotification.jsx';
 import Footer from './components/Footer.jsx';
+import HowItWorksModal from './components/HowItWorksModal.jsx';
+import MyBets from './components/MyBets.jsx';
 
 const PreLoginModal = ({ onClose, onLogin }) => (
     <div className="modal-overlay" onClick={onClose}>
@@ -68,11 +70,17 @@ function App() {
     const [leaderboardContract, setLeaderboardContract] = useState(null);
 
     const [betPrice, setBetPrice] = useState("0");
+    const [maxBetsPerDraw, setMaxBetsPerDraw] = useState(0);
     const [drawHistory, setDrawHistory] = useState([]);
     const [currentPot, setCurrentPot] = useState("0");
+    const [bonusPot, setBonusPot] = useState("0");
+    const [isGamePaused, setIsGamePaused] = useState(false);
+    const [betsThisRound, setBetsThisRound] = useState(0);
+    const [playerBets, setPlayerBets] = useState({ numbers: new Set(), animals: new Set() });
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [isHowItWorksModalOpen, setIsHowItWorksModalOpen] = useState(false);
     const [isPreLoginModalOpen, setIsPreLoginModalOpen] = useState(false);
     const [initializationError, setInitializationError] = useState(null);
     const [notifications, setNotifications] = useState([]);
@@ -93,17 +101,19 @@ function App() {
     const loadPublicData = useCallback(async () => {
         if (!readOnlyContract) return;
         try {
-            const [currentBetPrice, history, pot] = await Promise.all([
-                readOnlyContract.betPrice(),
+            const [status, history] = await Promise.all([
+                readOnlyContract.getFullStatus(),
                 readOnlyContract.getDrawHistory().catch(e => {
                     console.error("Falha ao carregar getDrawHistory, retornando array vazio.", e);
                     return [];
                 }),
-                readOnlyContract.getCurrentRoundPot(),
             ]);
-            setBetPrice(formatEther(currentBetPrice));
+            setBetPrice(formatEther(status.betPrice));
+            setMaxBetsPerDraw(Number(status.maxBetsPerDraw));
+            setIsGamePaused(status.isPaused);
             setDrawHistory([...history].sort((a, b) => Number(b.id) - Number(a.id)));
-            setCurrentPot(formatEther(pot));
+            setCurrentPot(formatEther(status.currentPot));
+            setBonusPot(formatEther(status.bonusPot));
         } catch (error) {
             console.error("Falha ao carregar dados públicos:", error);
             setInitializationError("Não foi possível carregar os dados do jogo.");
@@ -111,22 +121,37 @@ function App() {
     }, [readOnlyContract]);
 
     const loadPrivateData = useCallback(async () => {
-        if (!provider || !gameWalletAddress) return;
+        if (!provider || !gameWalletAddress || !contract) return;
+
         try {
             const balance = await provider.getBalance(gameWalletAddress);
             setWalletBalance(formatEther(balance));
-            if (contract) {
-                const [isAdminStatus, prize] = await Promise.all([
-                    contract.admins(gameWalletAddress),
-                    contract.pendingWithdrawals(gameWalletAddress),
-                ]);
-                setIsAdmin(isAdminStatus);
-                setPendingPrize(formatEther(prize));
-            }
+
+            const [isAdminStatus, prize, betsInRound, myBetsResult] = await Promise.all([
+            contract.admins(gameWalletAddress),
+            contract.pendingWithdrawals(gameWalletAddress),
+            contract.betsPerPlayerInRound(gameWalletAddress),
+            contract.getPlayerBets(gameWalletAddress)
+            ]);
+
+            const numbersRaw = Array.from(myBetsResult?.numbers ?? myBetsResult?.[0] ?? []);
+            const animalsRaw = Array.from(myBetsResult?.animals ?? myBetsResult?.[1] ?? []);
+
+            const numbersArray = numbersRaw.map(n => Number(n));
+            const animalsArray = animalsRaw.map(a => String(a));
+
+            setPlayerBets({
+            numbers: new Set(numbersArray),
+            animals: new Set(animalsArray)
+            });
+
+            setIsAdmin(isAdminStatus);
+            setPendingPrize(formatEther(prize));
+            setBetsThisRound(Number(betsInRound));
         } catch (error) {
             console.error("Falha ao carregar dados do usuário:", error);
         }
-    }, [contract, provider, gameWalletAddress]);
+        }, [contract, provider, gameWalletAddress]);
 
     const refreshBlockchainData = useCallback(async () => {
         await Promise.all([loadPublicData(), loadPrivateData()]);
@@ -217,6 +242,8 @@ function App() {
 
             const ethersProvider = new BrowserProvider(privyProvider);
             const signer = await ethersProvider.getSigner();
+            const signerAddr = await signer.getAddress();
+
             const gameContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
             setProvider(ethersProvider);
@@ -239,7 +266,7 @@ function App() {
             const wsProvider = new WebSocketProvider(monadTestnet.rpcUrls.default.webSocket[0]);
             const eventContract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wsProvider);
 
-            const handleEvent = (player, numbers, animals) => {
+            const handleEvent = (drawId, player, numbers, animals) => {
                  if (player && numbers && animals) {
                     const totalBets = numbers.length + animals.length;
                     const eventId = `${player}-${Date.now()}`;
@@ -278,24 +305,35 @@ function App() {
     const handlePlaceBet = async (numbers, animals) => {
         if (!authenticated) { 
             setIsPreLoginModalOpen(true);
-            return; 
+            return false;
         }
-        if (!contract || !provider) return addNotification("Carteira não está pronta.", 'error');
+        if (isGamePaused) {
+            addNotification("O jogo está pausado no momento.", 'error');
+            return false;
+        }
+        if (!contract || !provider) {
+            addNotification("Carteira não está pronta.", 'error');
+            return false;
+        }
+        
+        const totalBetCount = numbers.length + animals.length;
+
+        if (betsThisRound + totalBetCount > maxBetsPerDraw) {
+            addNotification(`Limite de ${maxBetsPerDraw} apostas por rodada excedido. Você já fez ${betsThisRound} aposta(s).`, 'error');
+            return false;
+        }
         
         try {
-            const totalBetCount = BigInt(numbers.length + animals.length);
             const price = parseEther(betPrice);
-            const totalValue = totalBetCount * price;
+            const totalValue = BigInt(totalBetCount) * price;
 
             const userBalance = parseEther(walletBalance);
             if (userBalance < totalValue) {
                 addNotification("Saldo insuficiente.", 'error');
-                return;
+                return false;
             }
-
-            addNotification('Aguarde a confirmação da transação...', 'info');
             
-            const { hash } = await sendTransaction(
+            await sendTransaction(
                 {
                     to: CONTRACT_ADDRESS,
                     data: contract.interface.encodeFunctionData("placeBets", [numbers, animals]),
@@ -305,11 +343,17 @@ function App() {
                 { address: gameWalletAddress }
             );
 
-            await provider.waitForTransaction(hash);
             addNotification('Aposta realizada com sucesso!', 'success');
+            await refreshBlockchainData(); 
+            return true;
+
         } catch (error) {
             console.error("Erro ao apostar:", error);
-            addNotification(`Falha na aposta: ${error.message || "Erro desconhecido."}`, 'error');
+            const errorMessage = error.message || "Erro desconhecido";
+            if (!errorMessage.includes('User rejected')) {
+                addNotification(`Falha na aposta: ${errorMessage}`, 'error');
+            }
+            return false;
         }
     };
 
@@ -318,8 +362,7 @@ function App() {
         if (!contract || !provider) return addNotification("Carteira não está pronta.", 'error');
 
         try {
-            addNotification('Enviando transação de saque...', 'info');
-            const { hash } = await sendTransaction(
+            await sendTransaction(
                 {
                     to: CONTRACT_ADDRESS,
                     data: contract.interface.encodeFunctionData("withdrawPrize"),
@@ -328,11 +371,14 @@ function App() {
                 },
                 { address: gameWalletAddress }
             );
-            await provider.waitForTransaction(hash);
-            addNotification('Prêmio sacado com sucesso!', 'success');
+            addNotification('Saque bem-sucedido!', 'success');
+            refreshBlockchainData();
         } catch (error) {
             console.error("Erro ao sacar:", error);
-            addNotification(`Falha no saque: ${error.message || "Erro desconhecido."}`, 'error');
+            const errorMessage = error.message || "Erro desconhecido";
+            if (!errorMessage.includes('User rejected')) {
+                addNotification(`Falha no saque: ${errorMessage}`, 'error');
+            }
         }
     };
 
@@ -341,8 +387,7 @@ function App() {
         if (!provider) return addNotification("Carteira não está pronta.", 'error');
 
         try {
-            addNotification('Enviando transação de saque de MON...', 'info');
-            const { hash } = await sendTransaction(
+            await sendTransaction(
                 {
                     to,
                     value: '0x' + value.toString(16),
@@ -350,17 +395,22 @@ function App() {
                 },
                 { address: gameWalletAddress }
             );
-            await provider.waitForTransaction(hash);
             addNotification('MON sacado com sucesso!', 'success');
+            refreshBlockchainData();
         } catch (error) {
             console.error("Erro ao sacar MON:", error);
-            addNotification(`Falha no saque de MON: ${error.message || "Erro desconhecido."}`, 'error');
+            const errorMessage = error.message || "Erro desconhecido";
+             if (!errorMessage.includes('User rejected')) {
+                addNotification(`Falha no saque de MON: ${errorMessage}`, 'error');
+            }
         }
     };
     
     const renderContent = () => {
         if (initializationError) return <div className="card error-card"><h2>Erro</h2><p>{initializationError}</p></div>;
         if (!readOnlyContract || !leaderboardContract) return <LoadingState message="Carregando dados..." />;
+
+        const totalPotValue = parseFloat(currentPot) + parseFloat(bonusPot);
 
         return (
             <>
@@ -383,6 +433,12 @@ function App() {
                         <button onClick={handleWithdraw}>Sacar Meu Prêmio</button>
                     </div>
                 )}
+                {isGamePaused && (
+                    <div className="card danger-card">
+                        <h3>Jogo Pausado</h3>
+                        <p>O jogo está temporariamente pausado por um administrador. Novas apostas não são permitidas no momento.</p>
+                    </div>
+                )}
                 <div className="stats-grid">
                     <div className="card pot-display">
                         <h2>Prêmio da Rodada Atual</h2>
@@ -392,16 +448,24 @@ function App() {
                                 maximumFractionDigits: 2 
                             }).format(Number(currentPot))} MON
                         </p>
+
                     </div>
                     <LastDraw lastDraw={drawHistory[0]} />
                 </div>
                 <BettingGrid 
-                    betPrice={betPrice} 
+                    betPrice={betPrice}
+                    maxBetsPerDraw={maxBetsPerDraw}
+                    betsThisRound={betsThisRound}
+                    playerBets={playerBets}
+                    isGamePaused={isGamePaused}
                     onPlaceBet={handlePlaceBet} 
                     isAuthenticated={authenticated}
                     addNotification={addNotification}
                     walletBalance={walletBalance}
                 />
+                
+                <MyBets playerBets={playerBets} />
+
                 <Leaderboard 
                     provider={readOnlyProvider} 
                     gameContract={readOnlyContract}
@@ -439,15 +503,22 @@ function App() {
                         <button onClick={() => setIsPreLoginModalOpen(true)}>Login com Monad Games ID</button>
                     ) : (
                         <>
+                            <button className="how-it-works-button" onClick={() => setIsHowItWorksModalOpen(true)}>
+                                Como Funciona?
+                            </button>
                             <div className="user-profile" onClick={() => setIsProfileModalOpen(true)}>
                                 {username === null ? "..." : username}
                             </div>
-                            {isAdmin && <button className="admin-button" onClick={() => setIsModalOpen(true)}>Painel Admin</button>}
+                            {isAdmin && <button className="admin-button" onClick={() => setIsModalOpen(true)}>Admin</button>}
                             <button onClick={logout}>Logout</button>
                         </>
                     )}
                 </div>
             </header>
+            <HowItWorksModal 
+                isOpen={isHowItWorksModalOpen} 
+                onClose={() => setIsHowItWorksModalOpen(false)} 
+            />
             <AdminModal 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)} 

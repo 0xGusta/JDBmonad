@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { parseEther } from "ethers";
 
 const animals = [
@@ -21,39 +21,83 @@ const animals = [
 ];
 
 
-const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated, addNotification, walletBalance }) => {
+const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGamePaused, onPlaceBet, isAuthenticated, addNotification, walletBalance }) => {
     const [selectedNumbers, setSelectedNumbers] = useState(new Set());
     const [selectedAnimals, setSelectedAnimals] = useState(new Set());
 
+    const totalSelections = selectedNumbers.size + selectedAnimals.size;
+    const canSelectMore = (betsThisRound + totalSelections) < maxBetsPerDraw;
+
     const toggleNumber = (num) => {
+        if (playerBets.numbers.has(num)) {
+            addNotification("Você já apostou neste número.", "info");
+            return;
+        }
+
         const newSelection = new Set(selectedNumbers);
-        if (newSelection.has(num)) newSelection.delete(num);
-        else newSelection.add(num);
+        if (newSelection.has(num)) {
+            newSelection.delete(num);
+        } else {
+            if (!canSelectMore) {
+                addNotification(`Você pode selecionar no máximo ${maxBetsPerDraw} itens por rodada.`, 'error');
+                return;
+            }
+            newSelection.add(num);
+        }
         setSelectedNumbers(newSelection);
     };
 
     const toggleAnimal = (animalName) => {
+        if (playerBets.animals.has(animalName)) {
+            addNotification("Você já apostou neste animal.", "info");
+            return;
+        }
+
         const newSelection = new Set(selectedAnimals);
-        if (newSelection.has(animalName)) newSelection.delete(animalName);
-        else newSelection.add(animalName);
+        if (newSelection.has(animalName)) {
+            newSelection.delete(animalName);
+        } else {
+             if (!canSelectMore) {
+                addNotification(`Você pode selecionar no máximo ${maxBetsPerDraw} itens por rodada.`, 'error');
+                return;
+            }
+            newSelection.add(animalName);
+        }
         setSelectedAnimals(newSelection);
     };
 
-    const handleBet = () => {
+    const handleBet = async () => {
         if (!isAuthenticated) {
             onPlaceBet([], []);
             return;
         }
-        if (selectedNumbers.size === 0 && selectedAnimals.size === 0) {
+        if (totalSelections === 0) {
             addNotification("Selecione números ou animais para apostar.", 'error');
             return;
         }
-        onPlaceBet(Array.from(selectedNumbers), Array.from(selectedAnimals));
+        
+        const success = await onPlaceBet(Array.from(selectedNumbers), Array.from(selectedAnimals));
+        
+        if (success) {
+            setSelectedNumbers(new Set());
+            setSelectedAnimals(new Set());
+        }
     };
-
-    const totalSelections = selectedNumbers.size + selectedAnimals.size;
+    
     const totalCost = totalSelections * parseFloat(betPrice);
     const hasSufficientBalance = isAuthenticated ? parseEther(walletBalance || '0') >= parseEther(totalCost.toString()) : false;
+    
+    const getClassName = (type, value) => {
+        if (type === 'animal') {
+            if (playerBets.animals.has(value)) return 'already-bet-animal';
+            if (selectedAnimals.has(value)) return 'selected-animal';
+        }
+        if (type === 'number') {
+            if (playerBets.numbers.has(value)) return 'already-bet';
+            if (selectedNumbers.has(value)) return 'selected';
+        }
+        return '';
+    };
 
     return (
         <div className="card game-card">
@@ -66,20 +110,21 @@ const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated, addNotification, w
             </p>
             <div className="betting-grid">
                 {animals.map(animal => (
-                    <div className={`animal-card ${selectedAnimals.has(animal.name) ? 'selected-animal' : ''}`} key={animal.name}>
+                    <div className={`animal-card ${getClassName('animal', animal.name)}`} key={animal.name}>
                         <img
                             src={animal.img}
                             alt={animal.name}
                             className="animal-image"
-                            onClick={() => toggleAnimal(animal.name)}
+                            onClick={() => !isGamePaused && toggleAnimal(animal.name)}
                         />
                         <h3 className="animal-name">{animal.name}</h3>
                         <div className="number-grid">
                             {animal.numbers.map(num => (
                                 <button
                                     key={num}
-                                    className={`number-item ${selectedNumbers.has(num) ? 'selected' : ''}`}
+                                    className={`number-item ${getClassName('number', num)}`}
                                     onClick={() => toggleNumber(num)}
+                                    disabled={isGamePaused || playerBets.numbers.has(num)}
                                 >
                                     {String(num).padStart(2, '0')}
                                 </button>
@@ -103,8 +148,12 @@ const BettingGrid = ({ betPrice, onPlaceBet, isAuthenticated, addNotification, w
                 <p style={{color: 'var(--danger-color)', textAlign: 'center', fontWeight: 'bold'}}>Saldo insuficiente.</p>
             )}
 
-            <button className="bet-button" onClick={handleBet} disabled={isAuthenticated && (!hasSufficientBalance || totalSelections === 0)}>
-                {isAuthenticated ? `Apostar Agora` : 'Conectar Carteira para Apostar'}
+            <button 
+                className="bet-button" 
+                onClick={handleBet} 
+                disabled={isGamePaused || (isAuthenticated && (!hasSufficientBalance || totalSelections === 0))}
+            >
+                {isGamePaused ? 'Jogo Pausado' : isAuthenticated ? 'Apostar Agora' : 'Conectar Carteira para Apostar'}
             </button>
         </div>
     );

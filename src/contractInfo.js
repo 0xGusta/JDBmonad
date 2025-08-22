@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0xcE6f6b0CB72C72F8B54a8f3480C01CCe9c9CBFA5";
+export const CONTRACT_ADDRESS = "0x7d2A987F064063a8f71A61994E90591Bb3c3f3f8";
 
 export const LEADERBOARD_ADDRESS = "0xceCBFF203C8B6044F52CE23D914A1bfD997541A4";
 
@@ -488,6 +488,17 @@ export const LEADERBOARD_ABI = [
 	}
 ];
 
+
+
+
+
+
+
+
+
+
+
+
 export const CONTRACT_ABI = [
 	{
 		"inputs": [],
@@ -538,6 +549,12 @@ export const CONTRACT_ABI = [
 		"inputs": [
 			{
 				"indexed": true,
+				"internalType": "uint256",
+				"name": "drawId",
+				"type": "uint256"
+			},
+			{
+				"indexed": true,
 				"internalType": "address",
 				"name": "player",
 				"type": "address"
@@ -556,6 +573,25 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"name": "BetsPlaced",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "admin",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "BonusAddedToPot",
 		"type": "event"
 	},
 	{
@@ -632,6 +668,19 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"name": "DrawProcessed",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "newLimit",
+				"type": "uint256"
+			}
+		],
+		"name": "MaxBetsChanged",
 		"type": "event"
 	},
 	{
@@ -792,6 +841,13 @@ export const CONTRACT_ABI = [
 		"type": "function"
 	},
 	{
+		"inputs": [],
+		"name": "addBonusToPot",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
 		"inputs": [
 			{
 				"internalType": "address",
@@ -882,6 +938,38 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "betsPerPlayerInRound",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "bonusPot",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "uint64",
 				"name": "_sequenceNumber",
 				"type": "uint64"
@@ -935,6 +1023,11 @@ export const CONTRACT_ABI = [
 				"internalType": "string",
 				"name": "winningAnimal",
 				"type": "string"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "pythRandomNumber",
+				"type": "bytes32"
 			},
 			{
 				"internalType": "uint256",
@@ -1017,6 +1110,11 @@ export const CONTRACT_ABI = [
 						"type": "string"
 					},
 					{
+						"internalType": "bytes32",
+						"name": "pythRandomNumber",
+						"type": "bytes32"
+					},
+					{
 						"internalType": "uint256",
 						"name": "timestamp",
 						"type": "uint256"
@@ -1058,6 +1156,40 @@ export const CONTRACT_ABI = [
 						],
 						"internalType": "struct JDB.Winner[]",
 						"name": "animalWinners",
+						"type": "tuple[]"
+					},
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "number",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address[]",
+								"name": "players",
+								"type": "address[]"
+							}
+						],
+						"internalType": "struct JDB.NumberBet[]",
+						"name": "numberBets",
+						"type": "tuple[]"
+					},
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "animal",
+								"type": "string"
+							},
+							{
+								"internalType": "address[]",
+								"name": "players",
+								"type": "address[]"
+							}
+						],
+						"internalType": "struct JDB.AnimalBet[]",
+						"name": "animalBets",
 						"type": "tuple[]"
 					}
 				],
@@ -1107,7 +1239,17 @@ export const CONTRACT_ABI = [
 					},
 					{
 						"internalType": "uint256",
+						"name": "bonusPot",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
 						"name": "betPrice",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "maxBetsPerDraw",
 						"type": "uint256"
 					},
 					{
@@ -1122,6 +1264,37 @@ export const CONTRACT_ABI = [
 					}
 				],
 				"internalType": "struct JDB.FullStatus",
+				"name": "",
+				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "player",
+				"type": "address"
+			}
+		],
+		"name": "getPlayerBets",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "uint256[]",
+						"name": "numbers",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "string[]",
+						"name": "animals",
+						"type": "string[]"
+					}
+				],
+				"internalType": "struct JDB.PlayerBets",
 				"name": "",
 				"type": "tuple"
 			}
@@ -1188,6 +1361,19 @@ export const CONTRACT_ABI = [
 				"internalType": "bool",
 				"name": "",
 				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "maxBetsPerDraw",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -1409,6 +1595,19 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"name": "setBetPrice",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_newLimit",
+				"type": "uint256"
+			}
+		],
+		"name": "setMaxBetsPerDraw",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"

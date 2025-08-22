@@ -1,215 +1,246 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { parseEther, formatEther } from "ethers";
 import { CONTRACT_ADDRESS } from '../contractInfo';
 import { monadTestnet } from '../monadChain';
 
+const StatusItem = ({ label, value, children }) => (
+    <div className="status-item">
+        <strong>{label}:</strong>
+        <span>{children || value}</span>
+    </div>
+);
+
+const ActionSection = ({ title, description, children }) => (
+    <div className="admin-action">
+        <h4>{title}</h4>
+        {description && <p className="action-description">{description}</p>}
+        {children}
+    </div>
+);
+
+
 const AdminModal = ({ isOpen, onClose, contract, readOnlyContract, provider, sendTransaction, gameWalletAddress, addNotification, onSuccess }) => {
+    const [activeTab, setActiveTab] = useState('status');
     const [contractStatus, setContractStatus] = useState(null);
 
-    const fetchContractStatus = async () => {
+    const fetchContractStatus = useCallback(async (isInitialLoad = false) => {
         const contractReader = contract || readOnlyContract;
         if (!contractReader) return;
 
         try {
-            const status = await contractReader.getFullStatus();
+            const [status, numberPercent, animalPercent] = await Promise.all([
+                contractReader.getFullStatus(),
+                contractReader.numberHitPercentage(),
+                contractReader.animalHitPercentage()
+            ]);
+
             setContractStatus({
                 isPaused: status.isPaused,
                 statusString: status.statusString,
                 nextDrawId: status.nextDrawId.toString(),
                 activeSequenceNumber: status.activeSequenceNumber.toString(),
                 currentPot: formatEther(status.currentPot),
+                bonusPot: formatEther(status.bonusPot),
                 betPrice: formatEther(status.betPrice),
+                maxBetsPerDraw: status.maxBetsPerDraw.toString(),
                 isRandomNumberFulfilled: status.isRandomNumberFulfilled,
+                numberHitPercentage: numberPercent.toString(),
+                animalHitPercentage: animalPercent.toString()
             });
         } catch (error) {
             console.error("Erro ao buscar status do contrato:", error);
+            if (isInitialLoad) {
+               addNotification("Não foi possível carregar o status do contrato.", "error");
+            }
         }
-    };
+    }, [contract, readOnlyContract, addNotification]);
 
     useEffect(() => {
         if (isOpen) {
-            fetchContractStatus();
-            const intervalId = setInterval(fetchContractStatus, 2000);
+            if (!contractStatus) {
+                fetchContractStatus(true);
+            }
+            const intervalId = setInterval(() => fetchContractStatus(false), 5000);
             return () => clearInterval(intervalId);
         }
-    }, [isOpen, contract, readOnlyContract]);
+    }, [isOpen, contractStatus, fetchContractStatus]);
 
-    if (!isOpen) {
-        return null;
-    }
+    if (!isOpen) return null;
 
     const handleAction = async (action, args = [], txValue = '0x0') => {
         if (!contract || !provider || !sendTransaction || !gameWalletAddress) {
-            return addNotification("Componentes de transação não estão prontos.", 'error');
+            addNotification("Carteira não está pronta para transações.", 'error');
+            return;
         }
 
         try {
-            addNotification(`Enviando transação para "${action}"...`, 'info');
-            
-            const data = contract.interface.encodeFunctionData(action, args);
-            const { hash } = await sendTransaction(
-                { to: CONTRACT_ADDRESS, data, value: txValue, chainId: monadTestnet.id },
+            await sendTransaction(
+                { to: CONTRACT_ADDRESS, data: contract.interface.encodeFunctionData(action, args), value: txValue, chainId: monadTestnet.id },
                 { address: gameWalletAddress }
             );
 
-            addNotification("Transação enviada. O status será atualizado em breve.", 'info');
-
-            provider.waitForTransaction(hash).then(() => {
-                addNotification(`Transação para "${action}" foi confirmada!`, 'success');
-                if (onSuccess) onSuccess();
-                fetchContractStatus();
-            });
+            addNotification(`Ação "${action}" bem-sucedida!`, 'success');
+            if (onSuccess) onSuccess();
+            fetchContractStatus(true);
 
         } catch (error) {
             console.error(`Erro ao executar ${action}:`, error);
-            const errorMessage = error.reason || (error.data ? error.data.message : error.message) || "Erro desconhecido.";
-            addNotification(`Falha: ${errorMessage}`, 'error');
+            const errorMessage = error.reason || error.message || "Erro desconhecido.";
+            if (!errorMessage.includes('User rejected')) {
+                addNotification(`Falha na ação: ${errorMessage}`, 'error');
+            }
         }
     };
 
     const handleTriggerDraw = async () => {
-        if (!contract) { return addNotification("Contrato não está pronto.", 'error'); }
-        addNotification("Buscando taxa da Pyth...", 'info');
+        if (!contract) return addNotification("Contrato não está pronto.", 'error');
         try {
             const pythFee = await contract.getPythFee();
             const feeInHex = '0x' + pythFee.toString(16);
-            addNotification(`Taxa da Pyth encontrada. Iniciando sorteio...`, 'info');
             await handleAction('triggerDraw', [], feeInHex);
         } catch (error) {
-            console.error("Erro ao realizar sorteio:", error);
-            const errorMessage = error.reason || (error.data ? error.data.message : error.message);
-            addNotification(`Falha ao realizar sorteio: ${errorMessage}`, 'error');
+            addNotification(`Falha ao buscar taxa da Pyth: ${error.message}`, 'error');
         }
     };
 
-    const renderDrawButtons = () => {
-        if (!contractStatus) return null;
-
-        if (contractStatus.isRandomNumberFulfilled) {
-            return (
-                <button className="primary" onClick={() => handleAction('processDraw')}>
-                    Processar Sorteio
-                </button>
-            );
+    const handleAddBonus = () => {
+        const amount = document.getElementById('bonusAmountInput').value;
+        if (!amount || parseFloat(amount) <= 0) {
+            addNotification("Por favor, insira um valor de bônus válido.", "error");
+            return;
         }
-        
-
-            return (
-                <button className="primary" onClick={handleTriggerDraw}>
-                    Realizar Sorteio
-                </button>
-            );
-        
-
-        return null;
+        const valueAsHex = '0x' + parseEther(amount).toString(16);
+        handleAction('addBonusToPot', [], valueAsHex);
     };
+
+    const renderTabs = () => (
+        <div className="tabs">
+            <button className={activeTab === 'status' ? 'active' : ''} onClick={() => setActiveTab('status')}>Status</button>
+            <button className={activeTab === 'management' ? 'active' : ''} onClick={() => setActiveTab('management')}>Rodada</button>
+            <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>Configurações</button>
+            <button className={activeTab === 'admins' ? 'active' : ''} onClick={() => setActiveTab('admins')}>Admins</button>
+        </div>
+    );
+    
+    const renderStatusContent = () => (
+        <div className="status-grid">
+            <StatusItem label="Status">{contractStatus.statusString}</StatusItem>
+            <StatusItem label="Pausado">{contractStatus.isPaused ? 'Sim' : 'Não'}</StatusItem>
+            <StatusItem label="Próximo Sorteio">{`#${contractStatus.nextDrawId}`}</StatusItem>
+            <StatusItem label="Pote da Rodada">{`${parseFloat(contractStatus.currentPot).toFixed(4)} MON`}</StatusItem>
+            <StatusItem label="Pote Bônus">{`${parseFloat(contractStatus.bonusPot).toFixed(4)} MON`}</StatusItem>
+            <StatusItem label="Preço da Aposta">{`${parseFloat(contractStatus.betPrice).toFixed(4)} MON`}</StatusItem>
+            <StatusItem label="Apostas Máx.">{contractStatus.maxBetsPerDraw}</StatusItem>
+            <StatusItem label="Pyth OK">{contractStatus.isRandomNumberFulfilled ? 'Sim' : 'Não'}</StatusItem>
+            <StatusItem label="% Prêmio Número">{`${contractStatus.numberHitPercentage}%`}</StatusItem>
+            <StatusItem label="% Prêmio Animal">{`${contractStatus.animalHitPercentage}%`}</StatusItem>
+            <div className='full-width'>
+                <StatusItem label="Sequence Number Ativo (Pyth)">{contractStatus.activeSequenceNumber === '0' ? 'Nenhum' : contractStatus.activeSequenceNumber}</StatusItem>
+            </div>
+        </div>
+    );
+
+    const renderManagementContent = () => (
+        <>
+            <ActionSection title="Ações da Rodada">
+                {contractStatus?.isRandomNumberFulfilled ? (
+                    <button className="primary" onClick={() => handleAction('processDraw')}>Processar Sorteio</button>
+                ) : (
+                    <button className="primary" onClick={handleTriggerDraw} disabled={contractStatus?.activeSequenceNumber !== '0'}>Iniciar Sorteio</button>
+                )}
+            </ActionSection>
+            <ActionSection title="Adicionar Bônus ao Pote" description="Adicione um incentivo extra para o próximo sorteio. O valor será somado ao pote de apostas.">
+                <input id="bonusAmountInput" type="text" placeholder="Ex: 10.5 MON" />
+                <button onClick={handleAddBonus}>Adicionar Bônus</button>
+            </ActionSection>
+             <ActionSection title="Ações de Emergência" description="Use com cuidado.">
+                 <button className="danger" onClick={() => handleAction('refundAllBets')}>Reembolsar Rodada Atual</button>
+                 <input id="sequenceNumberInput" type="text" placeholder="Sequence Number do sorteio falho" style={{marginTop: '1rem'}} />
+                 <button className="danger" onClick={() => {
+                     const seqNum = document.getElementById('sequenceNumberInput').value;
+                     if (seqNum) handleAction('cancelFailedDraw', [seqNum]);
+                 }}>Cancelar Sorteio Falho</button>
+             </ActionSection>
+        </>
+    );
+
+    const renderSettingsContent = () => (
+        <>
+            <ActionSection title="Só são permitidas mudanças aqui quando não ha nenhuma aposta" description="É uma boa prática pausar o sorteio antes de fazer alterações.">
+            </ActionSection>
+            <ActionSection title="Preço da Aposta" description="Defina o custo de cada seleção (em MON).">
+                 <input id="newPriceInput" type="text" placeholder={`Atual: ${contractStatus?.betPrice || '0'} MON`} />
+                 <button onClick={() => {
+                     const newPrice = document.getElementById('newPriceInput').value;
+                     if (newPrice) handleAction('setBetPrice', [parseEther(newPrice)]);
+                 }}>Salvar Preço</button>
+            </ActionSection>
+            <ActionSection title="Limite de Apostas por Sorteio" description="Número máximo de apostas (números + animais) que um jogador pode fazer por rodada.">
+                 <input id="maxBetsInput" type="number" placeholder={`Atual: ${contractStatus?.maxBetsPerDraw || '0'}`} />
+                 <button onClick={() => {
+                     const newLimit = document.getElementById('maxBetsInput').value;
+                     if (newLimit) handleAction('setMaxBetsPerDraw', [newLimit]);
+                 }}>Salvar Limite</button>
+            </ActionSection>
+            <ActionSection title="Percentuais de Prêmio" description="A soma deve ser 100.">
+                 <input id="numPercentInput" type="number" placeholder="Número (Ex: 70)" />
+                 <input id="animalPercentInput" type="number" placeholder="Animal (Ex: 30)" />
+                 <button onClick={() => {
+                     const num = document.getElementById('numPercentInput').value;
+                     const animal = document.getElementById('animalPercentInput').value;
+                     if (num && animal) handleAction('setPercentages', [num, animal]);
+                 }}>Salvar Percentuais</button>
+            </ActionSection>
+             <ActionSection title="Controle do Jogo">
+                {contractStatus && !contractStatus.isPaused ? (
+                    <button onClick={() => handleAction('pause')}>Pausar Jogo</button>
+                ) : (
+                    <button className="warning" onClick={() => handleAction('unpause')}>Despausar Jogo</button>
+                )}
+            </ActionSection>
+        </>
+    );
+
+    const renderAdminsContent = () => (
+        <>
+            <ActionSection title="Adicionar Novo Administrador">
+                 <input id="newAdminAddress" type="text" placeholder="Endereço 0x..." />
+                 <button onClick={() => {
+                     const newAdmin = document.getElementById('newAdminAddress').value;
+                     if (newAdmin) handleAction('addAdmin', [newAdmin]);
+                 }}>Adicionar Admin</button>
+            </ActionSection>
+            <ActionSection title="Remover Administrador">
+                 <input id="removeAdminAddress" type="text" placeholder="Endereço 0x..." />
+                 <button className="danger" onClick={() => {
+                     const adminToRemove = document.getElementById('removeAdminAddress').value;
+                     if (adminToRemove) handleAction('removeAdmin', [adminToRemove]);
+                 }}>Remover Admin</button>
+            </ActionSection>
+        </>
+    );
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-content admin-modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>Painel de Administrador</h2>
                     <button onClick={onClose} className="close-button">&times;</button>
                 </div>
                 <div className="modal-body">
-                    <div className="status-dashboard">
-                        <h3>Status Atual do Contrato</h3>
-                        {contractStatus ? (
-                            <div className="status-grid">
-                                <div className="status-item">
-                                    <strong>Status:</strong> <span className={`status-${contractStatus.statusString.replace(/\s+/g, '-').toLowerCase()}`}>{contractStatus.statusString}</span>
-                                </div>
-                                <div className="status-item">
-                                    <strong>Próximo Sorteio Nº:</strong> {contractStatus.nextDrawId}
-                                </div>
-                                <div className="status-item">
-                                    <strong>Prêmio Acumulado:</strong> {parseFloat(contractStatus.currentPot).toFixed(4)} MON
-                                </div>
-                                <div className="status-item">
-                                    <strong>Preço da Aposta:</strong> {parseFloat(contractStatus.betPrice).toFixed(4)} MON
-                                </div>
-                                <div className="status-item full-width">
-                                    <strong>Sequence Number Ativo:</strong> 
-                                    <span> {contractStatus.activeSequenceNumber === '0' ? 'Nenhum' : contractStatus.activeSequenceNumber} </span>
-                                    <small>(ID do sorteio pendente)</small>
-                                </div>
-                            </div>
+                    {renderTabs()}
+                    <div className="tab-content">
+                        {!contractStatus ? (
+                            <p>Carregando...</p>
                         ) : (
-                            <p>Carregando status...</p>
-                        )}
-                         <button onClick={fetchContractStatus}>
-                             Atualizar Status
-                         </button>
-                    </div>
-                    
-                    <hr />
-                    <h3>Configurações Gerais</h3>
-                     <div className="admin-action">
-                         <h4>Mudar Preço da Aposta (em MON)</h4>
-                         <input id="newPriceInput" type="text" placeholder="Ex: 0.02" />
-                         <button onClick={() => {
-                             const priceValue = document.getElementById('newPriceInput').value;
-                             if (priceValue) handleAction('setBetPrice', [parseEther(priceValue)]);
-                         }}>Salvar Preço</button>
-                     </div>
-                     <div className="admin-action">
-                         <h4>Mudar Percentuais (Número/Animal)</h4>
-                         <input id="numPercentInput" type="number" placeholder="Prêmio do Número (Ex: 70)" />
-                         <input id="animalPercentInput" type="number" placeholder="Prêmio do Animal (Ex: 30)" />
-                         <button onClick={() => {
-                             const numPercent = document.getElementById('numPercentInput').value;
-                             const animalPercent = document.getElementById('animalPercentInput').value;
-                             if (numPercent && animalPercent) handleAction('setPercentages', [numPercent, animalPercent]);
-                         }}>Salvar Percentuais</button>
-                     </div>
-
-                    <hr />
-                    <h3>Gerenciamento de Jogo</h3>
-                     <div className="admin-action">
-                        <h4>Ações da Rodada</h4>
-                        {renderDrawButtons()}
-                        {contractStatus && !contractStatus.isPaused ? (
-                            <button onClick={() => handleAction('pause')}>Pausar Jogo</button>
-                        ) : (
-                            <button className="warning" onClick={() => handleAction('unpause')}>Despausar Jogo</button>
+                            <>
+                                {activeTab === 'status' && renderStatusContent()}
+                                {activeTab === 'management' && renderManagementContent()}
+                                {activeTab === 'settings' && renderSettingsContent()}
+                                {activeTab === 'admins' && renderAdminsContent()}
+                            </>
                         )}
                     </div>
-                    
-                    <hr />
-                    <h3>Gerenciar Admins</h3>
-                     <div className="admin-action">
-                          <h4>Adicionar Novo Administrador</h4>
-                         <input id="newAdminAddress" type="text" placeholder="Endereço 0x..." />
-                         <button onClick={() => {
-                             const newAdmin = document.getElementById('newAdminAddress').value;
-                             if (newAdmin) handleAction('addAdmin', [newAdmin]);
-                         }}>Adicionar Admin</button>
-                     </div>
-                     <div className="admin-action">
-                         <h4>Remover Administrador</h4>
-                         <input id="removeAdminAddress" type="text" placeholder="Endereço 0x..." />
-                         <button onClick={() => {
-                             const adminToRemove = document.getElementById('removeAdminAddress').value;
-                             if (adminToRemove) handleAction('removeAdmin', [adminToRemove]);
-                         }}>Remover Admin</button>
-                     </div>
-                    
-                    <hr />
-                    <h3>Ações de Emergência (Zona de Perigo)</h3>
-                     <div className="admin-action">
-                         <h4>Reembolsar Rodada Atual</h4>
-                         <p>Use se precisar cancelar a rodada atual e devolver o dinheiro das apostas.</p>
-                         <button className="danger" onClick={() => handleAction('refundAllBets')}>Reembolsar Rodada</button>
-                     </div>
-                      <div className="admin-action">
-                         <h4>Cancelar Sorteio Falho</h4>
-                         <p>Use se o status do jogo for "Falha no Oráculo". Requer o Sequence Number.</p>
-                         <input id="sequenceNumberInput" type="text" placeholder="Sequence Number do sorteio" />
-                         <button className="danger" onClick={() => {
-                             const seqNum = document.getElementById('sequenceNumberInput').value;
-                             if (seqNum) handleAction('cancelFailedDraw', [seqNum]);
-                         }}>Cancelar Sorteio</button>
-                     </div>
                 </div>
             </div>
         </div>
