@@ -1,7 +1,7 @@
 import React from 'react';
 
-const monadLogoUrl = '/public/images/monad.svg';
-const pythLogoUrl = '/public/images/pyth.svg';
+const monadLogoUrl = '/images/monad.svg';
+const pythLogoUrl = '/images/pyth.svg';
 const xLogoUrl = 'https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/x-social-media-white-icon.svg';
 const yourProjectXLink = 'https://x.com/futurotwitter:P';
 
