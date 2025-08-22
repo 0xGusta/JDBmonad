@@ -102,11 +102,8 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
     return (
         <div className="card game-card">
             <h2 style={{textAlign: 'center', marginBottom: '0.5rem'}}>Faça sua Aposta</h2>
-            <p style={{textAlign: 'center', color: 'var(--text-secondary-color)'}}>Preço por seleção: <strong>{new Intl.NumberFormat("en-US", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-                }).format(Number(betPrice))} MON
-                </strong>
+            <p style={{textAlign: 'center', color: 'var(--text-secondary-color)'}}>
+                Preço por seleção: <strong>{parseFloat(betPrice).toFixed(2)} MON</strong> | Limite por rodada: <strong>{maxBetsPerDraw} seleções</strong>
             </p>
             <div className="betting-grid">
                 {animals.map(animal => (
@@ -135,12 +132,9 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
             </div>
 
             <div className="bet-summary">
-                <p>Seleções: <strong>{totalSelections}</strong></p>
+                <p>Seleções na rodada: <strong>{betsThisRound + totalSelections}/{maxBetsPerDraw}</strong></p>
                 <p>
-                    Custo Total: <strong>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalCost)} MON</strong>
-                </p>
-                <p>
-                    Saldo: <strong>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(walletBalance)} MON</strong>
+                    Custo Total (desta aposta): <strong>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalCost)} MON</strong>
                 </p>
             </div>
 

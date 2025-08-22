@@ -446,9 +446,13 @@ function App() {
                             {new Intl.NumberFormat("en-US", { 
                                 minimumFractionDigits: 2, 
                                 maximumFractionDigits: 2 
-                            }).format(Number(currentPot))} MON
+                            }).format(totalPotValue)} MON
                         </p>
-
+                        {parseFloat(bonusPot) > 0 && (
+                            <p className="bonus-pot-text">
+                                (inclui {new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(bonusPot)} MON de bônus!)
+                            </p>
+                        )}
                     </div>
                     <LastDraw lastDraw={drawHistory[0]} />
                 </div>
