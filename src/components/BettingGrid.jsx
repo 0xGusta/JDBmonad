@@ -85,8 +85,8 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
     };
     
     const totalCost = totalSelections * parseFloat(betPrice);
-    const hasSufficientBalance = isAuthenticated ? parseEther(walletBalance || '0') >= parseEther(totalCost.toString()) : false;
-    
+    const totalCostString = totalCost > 0 ? totalCost.toFixed(18) : "0";
+    const hasSufficientBalance = isAuthenticated ? parseEther(walletBalance || '0') >= parseEther(totalCostString) : false;
     const getClassName = (type, value) => {
         if (type === 'animal') {
             if (playerBets.animals.has(value)) return 'already-bet-animal';
