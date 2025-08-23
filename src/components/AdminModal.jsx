@@ -28,11 +28,15 @@ const AdminModal = ({ isOpen, onClose, contract, readOnlyContract, provider, sen
         if (!contractReader) return;
 
         try {
-            const [status, numberPercent, animalPercent] = await Promise.all([
+
+            const [status, numberPercent, animalPercent, dappFeePercent, dappWalletAddress] = await Promise.all([
                 contractReader.getFullStatus(),
                 contractReader.numberHitPercentage(),
-                contractReader.animalHitPercentage()
+                contractReader.animalHitPercentage(),
+                contractReader.dappFeePercentage(),
+                contractReader.dappWallet()
             ]);
+
 
             setContractStatus({
                 isPaused: status.isPaused,
@@ -45,7 +49,9 @@ const AdminModal = ({ isOpen, onClose, contract, readOnlyContract, provider, sen
                 maxBetsPerDraw: status.maxBetsPerDraw.toString(),
                 isRandomNumberFulfilled: status.isRandomNumberFulfilled,
                 numberHitPercentage: numberPercent.toString(),
-                animalHitPercentage: animalPercent.toString()
+                animalHitPercentage: animalPercent.toString(),
+                dappFeePercentage: dappFeePercent.toString(),
+                dappWallet: dappWalletAddress
             });
         } catch (error) {
             console.error("Erro ao buscar status do contrato:", error);
@@ -134,8 +140,14 @@ const AdminModal = ({ isOpen, onClose, contract, readOnlyContract, provider, sen
             <StatusItem label="Pyth OK">{contractStatus.isRandomNumberFulfilled ? 'Sim' : 'Não'}</StatusItem>
             <StatusItem label="% Prêmio Número">{`${contractStatus.numberHitPercentage}%`}</StatusItem>
             <StatusItem label="% Prêmio Animal">{`${contractStatus.animalHitPercentage}%`}</StatusItem>
+            {/* NOVO: Exibe a porcentagem da taxa do DApp */}
+            <StatusItem label="% Taxa DApp">{`${contractStatus.dappFeePercentage}%`}</StatusItem>
             <div className='full-width'>
                 <StatusItem label="Sequence Number Ativo (Pyth)">{contractStatus.activeSequenceNumber === '0' ? 'Nenhum' : contractStatus.activeSequenceNumber}</StatusItem>
+            </div>
+             {/* NOVO: Exibe a carteira do DApp */}
+            <div className='full-width'>
+                <StatusItem label="Carteira da Taxa">{contractStatus.dappWallet}</StatusItem>
             </div>
         </div>
     );
@@ -182,14 +194,25 @@ const AdminModal = ({ isOpen, onClose, contract, readOnlyContract, provider, sen
                      if (newLimit) handleAction('setMaxBetsPerDraw', [newLimit]);
                  }}>Salvar Limite</button>
             </ActionSection>
-            <ActionSection title="Percentuais de Prêmio" description="A soma deve ser 100.">
-                 <input id="numPercentInput" type="number" placeholder="Número (Ex: 70)" />
-                 <input id="animalPercentInput" type="number" placeholder="Animal (Ex: 30)" />
+            {/* ALTERADO: Seção de percentuais agora inclui a taxa do DApp */}
+            <ActionSection title="Percentuais de Prêmio e Taxa" description="A soma dos três campos deve ser 100.">
+                 <input id="numPercentInput" type="number" placeholder={`Número (${contractStatus?.numberHitPercentage || '0'}%)`} />
+                 <input id="animalPercentInput" type="number" placeholder={`Animal (${contractStatus?.animalHitPercentage || '0'}%)`} />
+                 <input id="dappFeePercentInput" type="number" placeholder={`Taxa DApp (${contractStatus?.dappFeePercentage || '0'}%)`} />
                  <button onClick={() => {
                      const num = document.getElementById('numPercentInput').value;
                      const animal = document.getElementById('animalPercentInput').value;
-                     if (num && animal) handleAction('setPercentages', [num, animal]);
+                     const dappFee = document.getElementById('dappFeePercentInput').value;
+                     if (num && animal && dappFee) handleAction('setPercentages', [num, animal, dappFee]);
                  }}>Salvar Percentuais</button>
+            </ActionSection>
+            {/* NOVO: Seção para alterar a carteira da taxa */}
+            <ActionSection title="Carteira da Taxa DApp" description="Endereço que recebe a taxa de manutenção. Apenas o Dono pode alterar.">
+                 <input id="newDappWalletInput" type="text" placeholder="Novo endereço 0x..." />
+                 <button onClick={() => {
+                     const newWallet = document.getElementById('newDappWalletInput').value;
+                     if (newWallet) handleAction('setDappWallet', [newWallet]);
+                 }}>Salvar Carteira</button>
             </ActionSection>
              <ActionSection title="Controle do Jogo">
                 {contractStatus && !contractStatus.isPaused ? (
