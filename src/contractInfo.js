@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0x7d2A987F064063a8f71A61994E90591Bb3c3f3f8";
+export const CONTRACT_ADDRESS = "0x114141a9dEc5EF095f12a41D8E06891010F3d561";
 
 export const LEADERBOARD_ADDRESS = "0xceCBFF203C8B6044F52CE23D914A1bfD997541A4";
 
@@ -501,7 +501,13 @@ export const LEADERBOARD_ABI = [
 
 export const CONTRACT_ABI = [
 	{
-		"inputs": [],
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_initialDappWallet",
+				"type": "address"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
@@ -612,6 +618,19 @@ export const CONTRACT_ABI = [
 		"inputs": [
 			{
 				"indexed": true,
+				"internalType": "address",
+				"name": "newWallet",
+				"type": "address"
+			}
+		],
+		"name": "DappWalletChanged",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
 				"internalType": "uint64",
 				"name": "sequenceNumber",
 				"type": "uint64"
@@ -696,6 +715,12 @@ export const CONTRACT_ABI = [
 				"indexed": false,
 				"internalType": "uint256",
 				"name": "animalHit",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "dappFee",
 				"type": "uint256"
 			}
 		],
@@ -989,6 +1014,32 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"name": "currentRoundPlayers",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "dappFeePercentage",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "dappWallet",
 		"outputs": [
 			{
 				"internalType": "address",
@@ -1602,6 +1653,19 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "_newWallet",
+				"type": "address"
+			}
+		],
+		"name": "setDappWallet",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "uint256",
 				"name": "_newLimit",
 				"type": "uint256"
@@ -1622,6 +1686,11 @@ export const CONTRACT_ABI = [
 			{
 				"internalType": "uint256",
 				"name": "_animalHit",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_dappFee",
 				"type": "uint256"
 			}
 		],
