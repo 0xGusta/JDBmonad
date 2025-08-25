@@ -4,6 +4,7 @@ import { monadTestnet } from '../monadChain.js';
 import { LEADERBOARD_ADDRESS, LEADERBOARD_ABI } from '../contractInfo.js';
 
 const JDB_GAME_ID = 58;
+const JDB_GAME_ADDRESS_FOR_LEADERBOARD = "0x8cDdbc30cc9E4fe404EecD254056d9736f9Dc168";
 
 const Leaderboard = ({ leaderboardContract, yourAddress }) => {
     const [leaderboardData, setLeaderboardData] = useState([]);
@@ -15,9 +16,10 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
         }
 
         try {
-            const response = await fetch(`https://monad-games-id-site.vercel.app/api/leaderboard?page=1&gameId=${JDB_GAME_ID}&sortBy=transactions`);
+            const response = await fetch(`/api/leaderboard?page=1&gameId=${JDB_GAME_ID}&sortBy=transactions`);
+            
             if (!response.ok) {
-                throw new Error('Falha ao buscar dados do leaderboard');
+                throw new Error(`Falha ao buscar dados do leaderboard: ${response.statusText}`);
             }
             const apiResult = await response.json();
             
@@ -45,12 +47,12 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
 
         const wsProvider = new WebSocketProvider(monadTestnet.rpcUrls.default.webSocket[0]);
         const eventContract = new Contract(LEADERBOARD_ADDRESS, LEADERBOARD_ABI, wsProvider);
-        const JDB_GAME_ADDRESS_FOR_LEADERBOARD = "0x8cDdbc30cc9E4fe404EecD254056d9736f9Dc168";
+        
         const filter = eventContract.filters.PlayerDataUpdated(JDB_GAME_ADDRESS_FOR_LEADERBOARD);
         
         const handleUpdate = () => { 
             console.log("Evento PlayerDataUpdated recebido, atualizando leaderboard via API...");
-            setTimeout(() => fetchLeaderboard(true), 1500); 
+            setTimeout(() => fetchLeaderboard(true), 2000); 
         };
 
         eventContract.on(filter, handleUpdate);
