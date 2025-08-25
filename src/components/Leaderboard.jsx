@@ -3,81 +3,54 @@ import { Contract, WebSocketProvider } from "ethers";
 import { monadTestnet } from '../monadChain.js';
 import { LEADERBOARD_ADDRESS, LEADERBOARD_ABI } from '../contractInfo.js';
 
-const JDB_GAME_ADDRESS_FOR_LEADERBOARD = "0x8cDdbc30cc9E4fe404EecD254056d9736f9Dc168";
+const JDB_GAME_ID = 58;
 
-const Leaderboard = ({ provider, gameContract, leaderboardContract, yourAddress }) => {
+const Leaderboard = ({ leaderboardContract, yourAddress }) => {
     const [leaderboardData, setLeaderboardData] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const formatAddress = (address) => `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-
     const fetchLeaderboard = useCallback(async (isUpdate = false) => {
-        if (!provider || !gameContract || !leaderboardContract) return;
-
         if (!isUpdate) {
             setLoading(true);
         }
 
         try {
-            const playerAddresses = await gameContract.getAllTimePlayers();
-            if (playerAddresses.length === 0) {
-                setLeaderboardData([]);
-                return;
+            const response = await fetch(`https://monad-games-id-site.vercel.app/api/leaderboard?page=1&gameId=${JDB_GAME_ID}&sortBy=transactions`);
+            if (!response.ok) {
+                throw new Error('Falha ao buscar dados do leaderboard');
             }
+            const apiResult = await response.json();
             
-            const playerDataPromises = playerAddresses.map(async (address) => {
-                try {
-                    const [playerData, usernameRes] = await Promise.all([
-                        leaderboardContract.playerDataPerGame(JDB_GAME_ADDRESS_FOR_LEADERBOARD, address),
-                        fetch(`https://monad-games-id-site.vercel.app/api/check-wallet?wallet=${address}`)
-                    ]);
-
-                    const usernameData = await usernameRes.json();
-                    const username = usernameData.hasUsername ? usernameData.user.username : formatAddress(address);
-                    
-                    return {
-                        address,
-                        username,
-                        transactions: Number(playerData.transactions)
-                    };
-                } catch (e) {
-                    return { address, username: formatAddress(address), transactions: 0 };
-                }
-            });
-
-            const unsortedPlayers = await Promise.all(playerDataPromises);
+            const formattedData = apiResult.data.map(player => ({
+                address: player.walletAddress,
+                username: player.username,
+                transactions: player.transactionCount
+            }));
             
-            const sortedPlayers = unsortedPlayers
-                .filter(p => p.transactions > 0)
-                .sort((a, b) => b.transactions - a.transactions);
-            
-            setLeaderboardData(sortedPlayers.slice(0, 10));
+            setLeaderboardData(formattedData);
 
         } catch (error) {
-            console.error("Erro ao montar o leaderboard:", error);
+            console.error("Erro ao montar o leaderboard via API:", error);
         } finally {
-
             setLoading(false);
         }
-    }, [provider, gameContract, leaderboardContract]);
+    }, []);
 
     useEffect(() => {
-        if (leaderboardContract && gameContract) {
-            fetchLeaderboard();
-        }
-    }, [leaderboardContract, gameContract, fetchLeaderboard]);
+        fetchLeaderboard();
+    }, [fetchLeaderboard]);
 
     useEffect(() => {
         if (!leaderboardContract) return;
 
         const wsProvider = new WebSocketProvider(monadTestnet.rpcUrls.default.webSocket[0]);
         const eventContract = new Contract(LEADERBOARD_ADDRESS, LEADERBOARD_ABI, wsProvider);
-        
+        const JDB_GAME_ADDRESS_FOR_LEADERBOARD = "0x8cDdbc30cc9E4fe404EecD254056d9736f9Dc168";
         const filter = eventContract.filters.PlayerDataUpdated(JDB_GAME_ADDRESS_FOR_LEADERBOARD);
         
         const handleUpdate = () => { 
-            console.log("Evento PlayerDataUpdated recebido, atualizando leaderboard...");
-            setTimeout(() => fetchLeaderboard(true), 1000); 
+            console.log("Evento PlayerDataUpdated recebido, atualizando leaderboard via API...");
+            setTimeout(() => fetchLeaderboard(true), 1500); 
         };
 
         eventContract.on(filter, handleUpdate);
@@ -86,7 +59,7 @@ const Leaderboard = ({ provider, gameContract, leaderboardContract, yourAddress 
             eventContract.off(filter, handleUpdate); 
             wsProvider.destroy().catch(err => console.error("Erro ao fechar WebSocket:", err));
         };
-    }, [leaderboardContract]);
+    }, [leaderboardContract, fetchLeaderboard]);
 
     return (
         <div className="card leaderboard-card">
