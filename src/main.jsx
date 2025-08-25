@@ -16,11 +16,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         defaultChain: monadTestnet,
         supportedChains: [monadTestnet],
         loginMethodsAndOrder: {
-        primary: [`privy:${monadGamesId}`],
-      },
+          primary: [`privy:${monadGamesId}`],
+        },
         embeddedWallets: {
           createOnLogin: 'users-without-wallets',
           requireUserPasswordOnCreate: false,
+        },
+        appearance: {
+          logo: "/images/placeholder.png",
         },
       }}
     >
