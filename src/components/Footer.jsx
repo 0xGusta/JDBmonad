@@ -3,7 +3,7 @@ import React from 'react';
 const monadLogoUrl = '/images/monad.svg';
 const pythLogoUrl = '/images/pyth.svg';
 const xLogoUrl = 'https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/x-social-media-white-icon.svg';
-const yourProjectXLink = 'https://x.com/futurotwitter:P';
+const XLink= 'https://x.com/futurotwitter:P';
 
 const Footer = () => {
     return (
@@ -20,7 +20,7 @@ const Footer = () => {
                 </div>
             </div>
             <div className="social-link">
-                <a href={yourProjectXLink} target="_blank" rel="noopener noreferrer">
+                <a href={XLink} target="_blank" rel="noopener noreferrer">
                     <img src={xLogoUrl} alt="X Logo" />
                 </a>
             </div>
