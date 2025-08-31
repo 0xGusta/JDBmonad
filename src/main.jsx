@@ -23,7 +23,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           requireUserPasswordOnCreate: false,
         },
         appearance: {
-          logo: "/images/placeholder.png",
+          logo: "/images/privyimg.jpg",
         },
       }}
     >
