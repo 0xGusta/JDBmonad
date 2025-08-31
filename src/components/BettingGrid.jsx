@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { parseEther } from "ethers";
 
 const animals = [
-    { name: "Monlandak", numbers: [0, 1, 2, 3, 4, 5], img: "/molandak.jpg" },
+    { name: "Molandak", numbers: [0, 1, 2, 3, 4, 5], img: "/images/molandak.jpg" },
     { name: "Chog", numbers: [6, 7, 8, 9, 10, 11], img: "/images/chog.jpg" },
     { name: "Moyaki", numbers: [12, 13, 14, 15, 16, 17], img: "/images/moyaki.jpg" },
     { name: "Mouch", numbers: [18, 19, 20, 21, 22, 23], img: "/images/mouch.jpg" },
