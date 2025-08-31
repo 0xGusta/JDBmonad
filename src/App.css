@@ -1056,4 +1056,8 @@ input:focus {
   .container {
     margin: 0 auto;
   }
+
+  .logos {
+    flex-direction: column;
+  }
 }
