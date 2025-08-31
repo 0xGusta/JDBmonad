@@ -23,7 +23,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           requireUserPasswordOnCreate: false,
         },
         appearance: {
-          logo: "/images/privyimg.png",
+          logo: "/https://monanimalgame.vercel.app/privyimg.png",
         },
       }}
     >
