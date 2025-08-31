@@ -23,7 +23,7 @@ async function fetchUsername(wallet) {
     const data = await res.json();
     return data.hasUsername ? data.user.username : null;
   } catch (err) {
-    console.error("Erro ao buscar username:", err);
+    console.error("Error fetching username:", err);
     return null;
   }
 }
@@ -35,11 +35,11 @@ const History = ({ history }) => {
     if (!history) return;
     
     const allAddresses = new Set();
-    history.forEach(draw => {
-        draw.numberWinners.forEach(winner => allAddresses.add(winner.player));
-        draw.animalWinners.forEach(winner => allAddresses.add(winner.player));
-        draw.numberBets.forEach(bet => bet.players.forEach(player => allAddresses.add(player)));
-        draw.animalBets.forEach(bet => bet.players.forEach(player => allAddresses.add(player)));
+    history.forEach(raffle => {
+        raffle.numberWinners.forEach(winner => allAddresses.add(winner.player));
+        raffle.animalWinners.forEach(winner => allAddresses.add(winner.player));
+        raffle.numberBets.forEach(bet => bet.players.forEach(player => allAddresses.add(player)));
+        raffle.animalBets.forEach(bet => bet.players.forEach(player => allAddresses.add(player)));
     });
 
     allAddresses.forEach(address => {
@@ -55,42 +55,42 @@ const History = ({ history }) => {
   }, [history]);
 
   if (!history || history.length === 0) {
-    return <p>Ainda não há sorteios no histórico.</p>;
+    return <p>No raffles in history yet.</p>;
   }
 
   const sortedHistory = [...history].sort((a, b) => Number(b.id) - Number(a.id));
 
   return (
     <div className="history-list">
-      {sortedHistory.map((draw) => {
-        const pythBigInt = BigInt(draw.pythRandomNumber);
+      {sortedHistory.map((raffle) => {
+        const pythBigInt = BigInt(raffle.pythRandomNumber);
         const winningNumberCalc = pythBigInt % 96n;
 
         return (
-          <div key={draw.id.toString()} className="history-item">
+          <div key={raffle.id.toString()} className="history-item">
             <h4>
-              Sorteio #{draw.id.toString()} -{" "}
-              {new Date(Number(draw.timestamp) * 1000).toLocaleString('pt-BR')}
+              Raffle #{raffle.id.toString()} -{" "}
+              {new Date(Number(raffle.timestamp) * 1000).toLocaleString('en-US')}
             </h4>
             <p>
-              <strong>Número Sorteado:</strong> {draw.winningNumber.toString().padStart(2, '0')} |{" "}
-              <strong>Animal:</strong> {draw.winningAnimal} |{" "}
-              <strong>Prêmio Total:</strong>{" "}
+              <strong>Winning Number:</strong> {raffle.winningNumber.toString().padStart(2, '0')} |{" "}
+              <strong>Animal:</strong> {raffle.winningAnimal} |{" "}
+              <strong>Total Prize:</strong>{" "}
               {new Intl.NumberFormat("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
-              }).format(Number(formatEther(draw.totalPot)))}{" "}
+              }).format(Number(formatEther(raffle.totalPot)))}{" "}
               MON
             </p>
 
             <div className="winners-section">
                 <div className="histdiv">
-                  <strong>Ganhadores (Número):</strong>
+                  <strong>Winners (Number):</strong>
                   <ul>
-                    {draw.numberWinners.length > 0 ? (
-                      draw.numberWinners.map((winner, index) => (
+                    {raffle.numberWinners.length > 0 ? (
+                      raffle.numberWinners.map((winner, index) => (
                         <li key={`num-${index}`}>
-                          {usernames[winner.player] || formatAddress(winner.player)} - ganhou{" "}
+                          {usernames[winner.player] || formatAddress(winner.player)} - won{" "}
                           {new Intl.NumberFormat("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -99,18 +99,18 @@ const History = ({ history }) => {
                         </li>
                       ))
                     ) : (
-                      <li>Ninguém acertou o número.</li>
+                      <li>No one guessed the number.</li>
                     )}
                   </ul>
                 </div>
     
                 <div className="histdiv">
-                  <strong>Ganhadores (Animal):</strong>
+                  <strong>Winners (Animal):</strong>
                   <ul>
-                    {draw.animalWinners.length > 0 ? (
-                      draw.animalWinners.map((winner, index) => (
+                    {raffle.animalWinners.length > 0 ? (
+                      raffle.animalWinners.map((winner, index) => (
                         <li key={`animal-${index}`}>
-                          {usernames[winner.player] || formatAddress(winner.player)} - ganhou{" "}
+                          {usernames[winner.player] || formatAddress(winner.player)} - won{" "}
                           {new Intl.NumberFormat("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -119,43 +119,43 @@ const History = ({ history }) => {
                         </li>
                       ))
                     ) : (
-                      <li>Ninguém acertou o animal.</li>
+                      <li>No one guessed the animal.</li>
                     )}
                   </ul>
                 </div>
             </div>
             
-            <Accordion title="Verificar Cálculo do Sorteio">
+            <Accordion title="Verify Raffle Calculation">
                 <div className="debug-steps">
-                    <p>O número sorteado é derivado do número aleatório da Pyth usando a operação de módulo (`%`).</p>
+                    <p>The winning number is derived from the Pyth random number using the modulo operation (`%`).</p>
                     <ol>
                         <li>
-                            <strong>Número da Pyth (Hex):</strong>
-                            <span className="code-block">{draw.pythRandomNumber.toString()}</span>
+                            <strong>Pyth Number (Hex):</strong>
+                            <span className="code-block">{raffle.pythRandomNumber.toString()}</span>
                         </li>
                         <li>
-                            <strong>Convertido para Decimal:</strong>
+                            <strong>Converted to Decimal:</strong>
                             <span className="code-block">{pythBigInt.toString()}</span>
                         </li>
                         <li>
-                            <strong>Cálculo (Decimal % 96):</strong>
+                            <strong>Calculation (Decimal % 96):</strong>
                             <span className="code-block">{pythBigInt.toString()} % 96 = {winningNumberCalc.toString()}</span>
                         </li>
                         <li>
-                            <strong>Resultado Final:</strong>
+                            <strong>Final Result:</strong>
                             <span className="code-block final-result">{winningNumberCalc.toString().padStart(2, '0')}</span>
                         </li>
                     </ol>
                 </div>
             </Accordion>
 
-            <Accordion title="Ver Todas as Apostas da Rodada">
+            <Accordion title="View All Bets from the Raffle">
                 <div className="all-bets-container">
                     <div className="bet-category">
-                        <h4>Números Apostados:</h4>
-                        {draw.numberBets.length > 0 ? (
+                        <h4>Numbers Bet On:</h4>
+                        {raffle.numberBets.length > 0 ? (
                             <ul className="all-bets-list">
-                                {draw.numberBets.map((bet, index) => (
+                                {raffle.numberBets.map((bet, index) => (
                                     <li key={`nb-${index}`}>
                                         <span className="bet-item number">{String(Number(bet.number)).padStart(2, '0')}</span>
                                         <span className="bet-players">
@@ -164,13 +164,13 @@ const History = ({ history }) => {
                                     </li>
                                 ))}
                             </ul>
-                        ) : <p>Nenhum número foi apostado.</p>}
+                        ) : <p>No numbers were bet on.</p>}
                     </div>
                     <div className="bet-category">
-                        <h4>Animais Apostados:</h4>
-                         {draw.animalBets.length > 0 ? (
+                        <h4>Animals Bet On:</h4>
+                         {raffle.animalBets.length > 0 ? (
                             <ul className="all-bets-list">
-                                {draw.animalBets.map((bet, index) => (
+                                {raffle.animalBets.map((bet, index) => (
                                     <li key={`ab-${index}`}>
                                         <span className="bet-item animal">{bet.animal}</span>
                                         <span className="bet-players">
@@ -179,7 +179,7 @@ const History = ({ history }) => {
                                     </li>
                                 ))}
                             </ul>
-                        ) : <p>Nenhum animal foi apostado.</p>}
+                        ) : <p>No animals were bet on.</p>}
                     </div>
                 </div>
             </Accordion>

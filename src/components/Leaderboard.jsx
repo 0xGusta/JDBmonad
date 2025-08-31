@@ -19,7 +19,7 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
             const response = await fetch(`/api/leaderboard?page=1&gameId=${JDB_GAME_ID}&sortBy=transactions`);
             
             if (!response.ok) {
-                throw new Error(`Falha ao buscar dados do leaderboard: ${response.statusText}`);
+                throw new Error(`Failed to fetch leaderboard data: ${response.statusText}`);
             }
             const apiResult = await response.json();
             
@@ -32,7 +32,7 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
             setLeaderboardData(formattedData);
 
         } catch (error) {
-            console.error("Erro ao montar o leaderboard via API:", error);
+            console.error("Error building leaderboard via API:", error);
         } finally {
             setLoading(false);
         }
@@ -51,7 +51,7 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
         const filter = eventContract.filters.PlayerDataUpdated(JDB_GAME_ADDRESS_FOR_LEADERBOARD);
         
         const handleUpdate = () => { 
-            console.log("Evento PlayerDataUpdated recebido, atualizando leaderboard via API...");
+            console.log("PlayerDataUpdated event received, updating leaderboard via API...");
             setTimeout(() => fetchLeaderboard(true), 2000); 
         };
 
@@ -59,22 +59,22 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
 
         return () => { 
             eventContract.off(filter, handleUpdate); 
-            wsProvider.destroy().catch(err => console.error("Erro ao fechar WebSocket:", err));
+            wsProvider.destroy().catch(err => console.error("Error closing WebSocket:", err));
         };
     }, [leaderboardContract, fetchLeaderboard]);
 
     return (
         <div className="card leaderboard-card">
-            <h3>Leaderboard - Top 10 Apostadores</h3>
+            <h3>Leaderboard - Top 10 Bettors</h3>
             {loading ? (
-                <p>Carregando leaderboard...</p>
+                <p>Loading leaderboard...</p>
             ) : leaderboardData.length > 0 ? (
                 <table className="leaderboard-table">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Jogador</th>
-                            <th>Apostas</th>
+                            <th>Player</th>
+                            <th>Bets</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -88,7 +88,7 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
                     </tbody>
                 </table>
             ) : (
-                <p>Ainda não há apostas para exibir no ranking.</p>
+                <p>No bets yet to display in the ranking.</p>
             )}
         </div>
     );

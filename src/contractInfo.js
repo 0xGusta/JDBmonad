@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0x114141a9dEc5EF095f12a41D8E06891010F3d561";
+export const CONTRACT_ADDRESS = "0xBae94ADbaC86ef68cAc00990f9b030Eb114C0cDA";
 
 export const LEADERBOARD_ADDRESS = "0xceCBFF203C8B6044F52CE23D914A1bfD997541A4";
 
@@ -503,6 +503,56 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [
 			{
+				"internalType": "uint64",
+				"name": "sequence",
+				"type": "uint64"
+			},
+			{
+				"internalType": "address",
+				"name": "provider",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "randomNumber",
+				"type": "bytes32"
+			}
+		],
+		"name": "_entropyCallback",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_newAdmin",
+				"type": "address"
+			}
+		],
+		"name": "addAdmin",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "addBonusToPot",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "pause",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "_initialDappWallet",
 				"type": "address"
@@ -599,6 +649,19 @@ export const CONTRACT_ABI = [
 		],
 		"name": "BonusAddedToPot",
 		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint64",
+				"name": "_sequenceNumber",
+				"type": "uint64"
+			}
+		],
+		"name": "cancelFailedDraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -728,6 +791,24 @@ export const CONTRACT_ABI = [
 		"type": "event"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "_numbers",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "_animalNames",
+				"type": "string[]"
+			}
+		],
+		"name": "placeBets",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -745,6 +826,13 @@ export const CONTRACT_ABI = [
 		],
 		"name": "PrizeWithdrawn",
 		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "processDraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"anonymous": false,
@@ -785,6 +873,13 @@ export const CONTRACT_ABI = [
 		"type": "event"
 	},
 	{
+		"inputs": [],
+		"name": "refundAllBets",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -804,37 +899,97 @@ export const CONTRACT_ABI = [
 		"type": "event"
 	},
 	{
-		"inputs": [],
-		"name": "MIN_CANCEL_WAIT_TIME",
-		"outputs": [
+		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
+				"internalType": "address",
+				"name": "_adminToRemove",
+				"type": "address"
 			}
 		],
-		"stateMutability": "view",
+		"name": "removeAdmin",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
-				"internalType": "uint64",
-				"name": "sequence",
-				"type": "uint64"
-			},
-			{
-				"internalType": "address",
-				"name": "provider",
-				"type": "address"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "randomNumber",
-				"type": "bytes32"
+				"internalType": "uint256",
+				"name": "_newPriceInWei",
+				"type": "uint256"
 			}
 		],
-		"name": "_entropyCallback",
+		"name": "setBetPrice",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_newWallet",
+				"type": "address"
+			}
+		],
+		"name": "setDappWallet",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_newLimit",
+				"type": "uint256"
+			}
+		],
+		"name": "setMaxBetsPerDraw",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_numberHit",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_animalHit",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_dappFee",
+				"type": "uint256"
+			}
+		],
+		"name": "setPercentages",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "triggerDraw",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "unpause",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "withdrawPrize",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -850,26 +1005,6 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_newAdmin",
-				"type": "address"
-			}
-		],
-		"name": "addAdmin",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "addBonusToPot",
-		"outputs": [],
-		"stateMutability": "payable",
 		"type": "function"
 	},
 	{
@@ -990,19 +1125,6 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint64",
-				"name": "_sequenceNumber",
-				"type": "uint64"
-			}
-		],
-		"name": "cancelFailedDraw",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -1188,7 +1310,7 @@ export const CONTRACT_ABI = [
 								"type": "uint256"
 							}
 						],
-						"internalType": "struct JDB.Winner[]",
+						"internalType": "struct MonanimalGame.Winner[]",
 						"name": "numberWinners",
 						"type": "tuple[]"
 					},
@@ -1205,7 +1327,7 @@ export const CONTRACT_ABI = [
 								"type": "uint256"
 							}
 						],
-						"internalType": "struct JDB.Winner[]",
+						"internalType": "struct MonanimalGame.Winner[]",
 						"name": "animalWinners",
 						"type": "tuple[]"
 					},
@@ -1222,7 +1344,7 @@ export const CONTRACT_ABI = [
 								"type": "address[]"
 							}
 						],
-						"internalType": "struct JDB.NumberBet[]",
+						"internalType": "struct MonanimalGame.NumberBet[]",
 						"name": "numberBets",
 						"type": "tuple[]"
 					},
@@ -1239,12 +1361,12 @@ export const CONTRACT_ABI = [
 								"type": "address[]"
 							}
 						],
-						"internalType": "struct JDB.AnimalBet[]",
+						"internalType": "struct MonanimalGame.AnimalBet[]",
 						"name": "animalBets",
 						"type": "tuple[]"
 					}
 				],
-				"internalType": "struct JDB.Draw[]",
+				"internalType": "struct MonanimalGame.Draw[]",
 				"name": "",
 				"type": "tuple[]"
 			}
@@ -1314,7 +1436,7 @@ export const CONTRACT_ABI = [
 						"type": "bool"
 					}
 				],
-				"internalType": "struct JDB.FullStatus",
+				"internalType": "struct MonanimalGame.FullStatus",
 				"name": "",
 				"type": "tuple"
 			}
@@ -1345,7 +1467,7 @@ export const CONTRACT_ABI = [
 						"type": "string[]"
 					}
 				],
-				"internalType": "struct JDB.PlayerBets",
+				"internalType": "struct MonanimalGame.PlayerBets",
 				"name": "",
 				"type": "tuple"
 			}
@@ -1432,6 +1554,19 @@ export const CONTRACT_ABI = [
 	},
 	{
 		"inputs": [],
+		"name": "MIN_CANCEL_WAIT_TIME",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
 		"name": "nextDrawId",
 		"outputs": [
 			{
@@ -1491,13 +1626,6 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "pause",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -1571,38 +1699,6 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [
 			{
-				"internalType": "uint256[]",
-				"name": "_numbers",
-				"type": "uint256[]"
-			},
-			{
-				"internalType": "string[]",
-				"name": "_animalNames",
-				"type": "string[]"
-			}
-		],
-		"name": "placeBets",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "processDraw",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "refundAllBets",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
@@ -1625,81 +1721,6 @@ export const CONTRACT_ABI = [
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_adminToRemove",
-				"type": "address"
-			}
-		],
-		"name": "removeAdmin",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_newPriceInWei",
-				"type": "uint256"
-			}
-		],
-		"name": "setBetPrice",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_newWallet",
-				"type": "address"
-			}
-		],
-		"name": "setDappWallet",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_newLimit",
-				"type": "uint256"
-			}
-		],
-		"name": "setMaxBetsPerDraw",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_numberHit",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_animalHit",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_dappFee",
-				"type": "uint256"
-			}
-		],
-		"name": "setPercentages",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"inputs": [],
 		"name": "totalPendingWithdrawals",
 		"outputs": [
@@ -1710,27 +1731,6 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "triggerDraw",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "unpause",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawPrize",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ];

@@ -1,13 +1,14 @@
 :root {
   --primary-color: #7c3aed;
   --secondary-color: #4f46e5;
-  --background-color: #111827;
-  --surface-color: #1f2937;
+  --surface-color: rgba(114, 98, 150, 0.8);
   --text-color: #d1d5db;
   --text-secondary-color: #9ca3af;
-  --accent-color: #f59e0b;
+  --accent-color: #d900ff;
   --danger-color: #ef4444;
   --success-color: #10b981;
+  --border-color: rgba(55, 65, 81, 0.6);
+  --dark-surface: rgba(42, 53, 71, 0.7);
 
   --font-family-sans: 'Inter', 'Poppins', sans-serif;
   --border-radius: 12px;
@@ -23,7 +24,7 @@
 body {
   margin: 0;
   font-family: var(--font-family-sans);
-  background-color: var(--background-color);
+  background-color: #baa4ed;
   color: var(--text-color);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

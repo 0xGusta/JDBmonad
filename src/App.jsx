@@ -21,23 +21,23 @@ const PreLoginModal = ({ onClose, onLogin }) => (
     <div className="modal-overlay" onClick={onClose}>
         <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-                <h2>Conecte-se com Monad Games ID</h2>
+                <h2>Connect with Monad Games ID</h2>
                 <button onClick={onClose} className="close-button">&times;</button>
             </div>
             <div className="modal-body" style={{textAlign: 'center'}}>
                 <div className="admin-action">
-                    <h4>1. Crie sua conta no Monad ID</h4>
-                    <p style={{color: 'var(--text-secondary-color)'}}>É rápido, fácil e necessário para jogar.</p>
+                    <h4>1. Create your Monad ID account</h4>
+                    <p style={{color: 'var(--text-secondary-color)'}}>It's fast, easy and necessary to play.</p>
                     <a href="https://monad-games-id-site.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                         <button>Criar conta no Monad ID</button>
+                         <button>Create Monad ID Account</button>
                     </a>
                 </div>
                 <hr style={{margin: '2rem 0'}} />
                 <div className="admin-action">
-                    <h4>2. Já tem uma conta?</h4>
-                     <p style={{color: 'var(--text-secondary-color)'}}>Prossiga para se conectar com sua carteira.</p>
+                    <h4>2. Already have an account?</h4>
+                     <p style={{color: 'var(--text-secondary-color)'}}>Proceed to connect with your wallet.</p>
                     <button onClick={onLogin} className="primary">
-                        Conectar Carteira
+                        Connect Wallet
                     </button>
                 </div>
             </div>
@@ -72,6 +72,7 @@ function App() {
     const [betPrice, setBetPrice] = useState("0");
     const [maxBetsPerDraw, setMaxBetsPerDraw] = useState(0);
     const [drawHistory, setDrawHistory] = useState([]);
+    const [raffleHistory, setRaffleHistory] = useState([]);
     const [currentPot, setCurrentPot] = useState("0");
     const [bonusPot, setBonusPot] = useState("0");
     const [isGamePaused, setIsGamePaused] = useState(false);
@@ -104,19 +105,19 @@ function App() {
             const [status, history] = await Promise.all([
                 readOnlyContract.getFullStatus(),
                 readOnlyContract.getDrawHistory().catch(e => {
-                    console.error("Falha ao carregar getDrawHistory, retornando array vazio.", e);
+                    console.error("Failed to load getDrawHistory, returning empty array.", e);
                     return [];
                 }),
             ]);
             setBetPrice(formatEther(status.betPrice));
             setMaxBetsPerDraw(Number(status.maxBetsPerDraw));
             setIsGamePaused(status.isPaused);
-            setDrawHistory([...history].sort((a, b) => Number(b.id) - Number(a.id)));
+            setRaffleHistory([...history].sort((a, b) => Number(b.id) - Number(a.id)));
             setCurrentPot(formatEther(status.currentPot));
             setBonusPot(formatEther(status.bonusPot));
         } catch (error) {
-            console.error("Falha ao carregar dados públicos:", error);
-            setInitializationError("Não foi possível carregar os dados do jogo.");
+            console.error("Failed to load public data:", error);
+            setInitializationError("Unable to load game data.");
         }
     }, [readOnlyContract]);
 
@@ -149,7 +150,7 @@ function App() {
             setPendingPrize(formatEther(prize));
             setBetsThisRound(Number(betsInRound));
         } catch (error) {
-            console.error("Falha ao carregar dados do usuário:", error);
+            console.error("Failed to load user data:", error);
         }
         }, [contract, provider, gameWalletAddress]);
 
@@ -185,7 +186,7 @@ function App() {
                 );
 
                 if (!crossAppAccount || !crossAppAccount.embeddedWallets || crossAppAccount.embeddedWallets.length === 0) {
-                    addNotification('Conta Monad Games ID não encontrada.', 'error');
+                    addNotification('Monad Games ID account not found.', 'error');
                     await logout();
                     isHandlingAuth.current = false;
                     return;
@@ -197,7 +198,7 @@ function App() {
                     const response = await fetch(`https://monad-games-id-site.vercel.app/api/check-wallet?wallet=${walletAddress}`);
                     const data = await response.json();
                     if (!data.hasUsername) {
-                        addNotification('Nome de usuário não encontrado. Crie um no Monad Games ID.', 'error');
+                        addNotification('Username not found. Create one on Monad Games ID.', 'error');
                         await logout();
                         isHandlingAuth.current = false;
                         return;
@@ -206,8 +207,8 @@ function App() {
                     setUsername(data.user.username);
                     setGameWalletAddress(walletAddress);
                 } catch (error) {
-                    console.error("Falha ao verificar username:", error);
-                    addNotification("Erro ao verificar usuário. Desconectando.", "error");
+                    console.error("Failed to verify username:", error);
+                    addNotification("Error verifying user. Disconnecting.", "error");
                     await logout();
                 } finally {
                     isHandlingAuth.current = false;
@@ -250,8 +251,8 @@ function App() {
             setContract(gameContract);
 
             } catch (e) {
-            console.error("Erro ao inicializar o contrato:", e);
-            addNotification("Erro ao configurar sua carteira. Tente novamente.", "error");
+            console.error("Error initializing contract:", e);
+            addNotification("Error setting up your wallet. Please try again.", "error");
             }
         };
 
@@ -308,18 +309,18 @@ function App() {
             return false;
         }
         if (isGamePaused) {
-            addNotification("O jogo está pausado no momento.", 'error');
+            addNotification("The game is currently paused.", 'error');
             return false;
         }
         if (!contract || !provider) {
-            addNotification("Carteira não está pronta.", 'error');
+            addNotification("Wallet is not ready.", 'error');
             return false;
         }
         
         const totalBetCount = numbers.length + animals.length;
 
         if (betsThisRound + totalBetCount > maxBetsPerDraw) {
-            addNotification(`Limite de ${maxBetsPerDraw} apostas por rodada excedido. Você já fez ${betsThisRound} aposta(s).`, 'error');
+            addNotification(`Limit of ${maxBetsPerDraw} bets per raffle exceeded. You have already made ${betsThisRound} bet(s).`, 'error');
             return false;
         }
         
@@ -329,7 +330,7 @@ function App() {
 
             const userBalance = parseEther(walletBalance);
             if (userBalance < totalValue) {
-                addNotification("Saldo insuficiente.", 'error');
+                addNotification("Insufficient balance.", 'error');
                 return false;
             }
             
@@ -343,15 +344,15 @@ function App() {
                 { address: gameWalletAddress }
             );
 
-            addNotification('Aposta realizada com sucesso!', 'success');
+            addNotification('Bet placed successfully!', 'success');
             await refreshBlockchainData(); 
             return true;
 
         } catch (error) {
-            console.error("Erro ao apostar:", error);
-            const errorMessage = error.message || "Erro desconhecido";
+            console.error("Error placing bet:", error);
+            const errorMessage = error.message || "Unknown error";
             if (!errorMessage.includes('User rejected')) {
-                addNotification(`Falha na aposta: ${errorMessage}`, 'error');
+                addNotification(`Bet failed: ${errorMessage}`, 'error');
             }
             return false;
         }
@@ -359,7 +360,7 @@ function App() {
 
     const handleWithdraw = async () => {
         if (!authenticated) { setIsPreLoginModalOpen(true); return; }
-        if (!contract || !provider) return addNotification("Carteira não está pronta.", 'error');
+        if (!contract || !provider) return addNotification("Wallet is not ready.", 'error');
 
         try {
             await sendTransaction(
@@ -371,20 +372,20 @@ function App() {
                 },
                 { address: gameWalletAddress }
             );
-            addNotification('Saque bem-sucedido!', 'success');
+            addNotification('Withdrawal successful!', 'success');
             refreshBlockchainData();
         } catch (error) {
-            console.error("Erro ao sacar:", error);
-            const errorMessage = error.message || "Erro desconhecido";
+            console.error("Error withdrawing:", error);
+            const errorMessage = error.message || "Unknown error";
             if (!errorMessage.includes('User rejected')) {
-                addNotification(`Falha no saque: ${errorMessage}`, 'error');
+                addNotification(`Withdrawal failed: ${errorMessage}`, 'error');
             }
         }
     };
 
     const handleMonWithdraw = async (to, value) => {
         if (!authenticated) { setIsPreLoginModalOpen(true); return; }
-        if (!provider) return addNotification("Carteira não está pronta.", 'error');
+        if (!provider) return addNotification("Wallet is not ready.", 'error');
 
         try {
             await sendTransaction(
@@ -395,20 +396,20 @@ function App() {
                 },
                 { address: gameWalletAddress }
             );
-            addNotification('MON sacado com sucesso!', 'success');
+            addNotification('MON withdrawn successfully!', 'success');
             refreshBlockchainData();
         } catch (error) {
-            console.error("Erro ao sacar MON:", error);
-            const errorMessage = error.message || "Erro desconhecido";
+            console.error("Error withdrawing MON:", error);
+            const errorMessage = error.message || "Unknown error";
              if (!errorMessage.includes('User rejected')) {
-                addNotification(`Falha no saque de MON: ${errorMessage}`, 'error');
+                addNotification(`MON withdrawal failed: ${errorMessage}`, 'error');
             }
         }
     };
     
     const renderContent = () => {
-        if (initializationError) return <div className="card error-card"><h2>Erro</h2><p>{initializationError}</p></div>;
-        if (!readOnlyContract || !leaderboardContract) return <LoadingState message="Carregando dados..." />;
+        if (initializationError) return <div className="card error-card"><h2>Error</h2><p>{initializationError}</p></div>;
+        if (!readOnlyContract || !leaderboardContract) return <LoadingState message="Loading data..." />;
 
         const totalPotValue = parseFloat(currentPot) + parseFloat(bonusPot);
 
@@ -416,32 +417,32 @@ function App() {
             <>
                 {authenticated && parseFloat(walletBalance) < 0.3 && (
                     <div className="card warning-card">
-                        <h3>Aviso</h3>
-                        <p>Seu saldo está baixo ({parseFloat(walletBalance).toFixed(2)} MON). Recarregue para continuar jogando.</p>
-                        <button onClick={() => setIsProfileModalOpen(true)}>Recarregar</button>
+                        <h3>Warning</h3>
+                        <p>Your balance is low ({parseFloat(walletBalance).toFixed(2)} MON). Top up to continue playing.</p>
+                        <button onClick={() => setIsProfileModalOpen(true)}>Top Up</button>
                     </div>
                 )}
                 {authenticated && parseFloat(pendingPrize) > 0 && (
                     <div className="card withdraw-card">
-                        <h3>Você tem um prêmio para sacar!</h3>
+                        <h3>You have a prize to withdraw!</h3>
                         <p className="pot-amount">
                           {parseFloat(pendingPrize).toLocaleString("en-US", { 
                              minimumFractionDigits: 2, 
                             maximumFractionDigits: 2 
                            })} MON
                         </p>
-                        <button onClick={handleWithdraw}>Sacar Meu Prêmio</button>
+                        <button onClick={handleWithdraw}>Withdraw My Prize</button>
                     </div>
                 )}
                 {isGamePaused && (
                     <div className="card danger-card">
-                        <h3>Jogo Pausado</h3>
-                        <p>O jogo está temporariamente pausado por um administrador. Novas apostas não são permitidas no momento.</p>
+                        <h3>Game Paused</h3>
+                        <p>The game is temporarily paused by an administrator. New bets are not allowed at this time.</p>
                     </div>
                 )}
                 <div className="stats-grid">
                     <div className="card pot-display">
-                        <h2>Prêmio da Rodada Atual</h2>
+                        <h2>Current Round Prize</h2>
                         <p className="pot-amount">
                             {new Intl.NumberFormat("en-US", { 
                                 minimumFractionDigits: 2, 
@@ -450,7 +451,7 @@ function App() {
                         </p>
                         
                     </div>
-                    <LastDraw lastDraw={drawHistory[0]} />
+                    <LastDraw lastDraw={raffleHistory[0]} />
                 </div>
                 <BettingGrid 
                     betPrice={betPrice}
@@ -473,8 +474,8 @@ function App() {
                     yourAddress={gameWalletAddress}
                 />
                 <div className="card history-card">
-                    <h3>Histórico Detalhado de Sorteios</h3>
-                    <History history={drawHistory} />
+                    <h3>Detailed Raffle History</h3>
+                    <History history={raffleHistory} />
                 </div>
             </>
         );
@@ -495,22 +496,29 @@ function App() {
                 ))}
             </div>
             <header>
-                <h1>JDB</h1>
+                {/* <h1>
+                  <h1>
+                      <img src="images/monanimallogo.svg" alt="JDB Logo" width={200} height={60} />
+                  </h1>
+                </h1> */}
                 <div className="header-controls">
+                    <div className="logo-container">
+                        <img src="images/monanimallogo.svg" alt="JDB Logo" width={200} height={60} />
+                    </div>
                     {!ready ? (
-                        <button disabled>Carregando...</button>
+                        <button disabled>Loading...</button>
                     ) : !authenticated ? (
-                        <button onClick={() => setIsPreLoginModalOpen(true)}>Login com Monad Games ID</button>
+                        <button onClick={() => setIsPreLoginModalOpen(true)}>Login with Monad Games ID</button>
                     ) : (
-                        <>
+                        <> <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
                             <button className="how-it-works-button" onClick={() => setIsHowItWorksModalOpen(true)}>
-                                Como Funciona?
+                                How It Works?
                             </button>
                             <div className="user-profile" onClick={() => setIsProfileModalOpen(true)}>
                                 {username === null ? "..." : username}
                             </div>
                             {isAdmin && <button className="admin-button" onClick={() => setIsModalOpen(true)}>Admin</button>}
-                            <button onClick={logout}>Logout</button>
+                            <button onClick={logout}>Logout</button></div>
                         </>
                     )}
                 </div>

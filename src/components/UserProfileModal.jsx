@@ -14,7 +14,7 @@ const UserProfileModal = ({ isOpen, onClose, username, balance, address, onWithd
 
     const handleWithdraw = () => {
         if (!withdrawAddress || !withdrawAmount) {
-            addNotification('Por favor, insira um endereço e uma quantidade válidos.', 'error');
+            addNotification('Please enter a valid address and amount.', 'error');
             return;
         }
         onWithdraw(withdrawAddress, parseEther(withdrawAmount));
@@ -22,14 +22,14 @@ const UserProfileModal = ({ isOpen, onClose, username, balance, address, onWithd
 
     const handleCopyAddress = () => {
         navigator.clipboard.writeText(address);
-        addNotification('Endereço copiado para a área de transferência!', 'success');
+        addNotification('Address copied to clipboard!', 'success');
     };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Perfil</h2>
+                    <h2>Profile</h2>
                     <button onClick={onClose} className="close-button">&times;</button>
                 </div>
                 <div className="modal-body">
@@ -42,27 +42,27 @@ const UserProfileModal = ({ isOpen, onClose, username, balance, address, onWithd
                         </p>
                     </div>
                     <div className="top-up-instructions">
-                        <h4>Como adicionar fundos à sua carteira:</h4>
-                        <p>Envie MON da sua carteira principal para este endereço.</p>
-                        <p>{address} <button onClick={handleCopyAddress}>Copiar</button></p>
+                        <h4>How to add funds to your wallet:</h4>
+                        <p>Send MON from your main wallet to this address.</p>
+                        <p>{address} <button onClick={handleCopyAddress}>Copy</button></p>
                     </div>
                     <div className="withdraw-section">
-                        <h4>Retirar MON</h4>
-                        <p>Carteira de destino:</p>
+                        <h4>Withdraw MON</h4>
+                        <p>Destination wallet:</p>
                         <input
                             type="text"
-                            placeholder="Endereço do Destinatário"
+                            placeholder="Recipient Address"
                             value={withdrawAddress}
                             onChange={(e) => setWithdrawAddress(e.target.value)}
                         />
-                        <p>Quantidade:</p>
+                        <p>Amount:</p>
                         <input
                             type="number"
-                            placeholder="Quantidade em MON"
+                            placeholder="Amount in MON"
                             value={withdrawAmount}
                             onChange={(e) => setWithdrawAmount(e.target.value)}
                         />
-                        <button onClick={handleWithdraw}>Retirar</button>
+                        <button onClick={handleWithdraw}>Withdraw</button>
                     </div>
                 </div>
             </div>

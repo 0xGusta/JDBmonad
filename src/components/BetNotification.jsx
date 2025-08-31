@@ -18,7 +18,7 @@ const BetNotification = ({ betEvent, onDismiss }) => {
           setUsername(null);
         }
       } catch (error) {
-        console.error("Erro ao buscar username:", error);
+        console.error("Error fetching username:", error);
         setUsername(null);
       }
     };
@@ -40,7 +40,7 @@ const BetNotification = ({ betEvent, onDismiss }) => {
 
   const { player, totalBets } = betEvent;
   const displayName = username || `${player.substring(0, 6)}...${player.substring(player.length - 4)}`;
-  const message = `${displayName} acabou de fazer ${totalBets} aposta${totalBets > 1 ? 's' : ''}!`;
+  const message = `${displayName} just made ${totalBets} bet${totalBets > 1 ? 's' : ''}!`;
 
   return (
     <div className={`bet-notification-banner ${visible ? 'visible' : ''}`}>

@@ -30,7 +30,7 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
 
     const toggleNumber = (num) => {
         if (playerBets.numbers.has(num)) {
-            addNotification("Você já apostou neste número.", "info");
+            addNotification("You have already bet on this number.", "info");
             return;
         }
 
@@ -39,7 +39,7 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
             newSelection.delete(num);
         } else {
             if (!canSelectMore) {
-                addNotification(`Você pode selecionar no máximo ${maxBetsPerDraw} itens por rodada.`, 'error');
+                addNotification(`You can select a maximum of ${maxBetsPerDraw} items per raffle.`, 'error');
                 return;
             }
             newSelection.add(num);
@@ -49,7 +49,7 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
 
     const toggleAnimal = (animalName) => {
         if (playerBets.animals.has(animalName)) {
-            addNotification("Você já apostou neste animal.", "info");
+            addNotification("You have already bet on this animal.", "info");
             return;
         }
 
@@ -58,7 +58,7 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
             newSelection.delete(animalName);
         } else {
              if (!canSelectMore) {
-                addNotification(`Você pode selecionar no máximo ${maxBetsPerDraw} itens por rodada.`, 'error');
+                addNotification(`You can select a maximum of ${maxBetsPerDraw} items per raffle.`, 'error');
                 return;
             }
             newSelection.add(animalName);
@@ -72,7 +72,7 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
             return;
         }
         if (totalSelections === 0) {
-            addNotification("Selecione números ou animais para apostar.", 'error');
+            addNotification("Select numbers or animals to bet on.", 'error');
             return;
         }
         
@@ -101,9 +101,9 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
 
     return (
         <div className="card game-card">
-            <h2 style={{textAlign: 'center', marginBottom: '0.5rem'}}>Faça sua Aposta</h2>
+            <h2 style={{textAlign: 'center', marginBottom: '0.5rem'}}>Place Your Bet</h2>
             <p style={{textAlign: 'center', color: 'var(--text-secondary-color)'}}>
-                Preço por seleção: <strong>{parseFloat(betPrice).toFixed(2)} MON</strong> | Limite por rodada: <strong>{maxBetsPerDraw} seleções</strong>
+                Price per selection: <strong>{parseFloat(betPrice).toFixed(2)} MON</strong> | Limit per raffle: <strong>{maxBetsPerDraw} selections</strong>
             </p>
             <div className="betting-grid">
                 {animals.map(animal => (
@@ -132,14 +132,14 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
             </div>
 
             <div className="bet-summary">
-                <p>Seleções na rodada: <strong>{betsThisRound + totalSelections}/{maxBetsPerDraw}</strong></p>
+                <p>Selections this raffle: <strong>{betsThisRound + totalSelections}/{maxBetsPerDraw}</strong></p>
                 <p>
-                    Custo Total (desta aposta): <strong>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalCost)} MON</strong>
+                    Total Cost (this bet): <strong>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalCost)} MON</strong>
                 </p>
             </div>
 
             {!hasSufficientBalance && isAuthenticated && totalCost > 0 && (
-                <p style={{color: 'var(--danger-color)', textAlign: 'center', fontWeight: 'bold'}}>Saldo insuficiente.</p>
+                <p style={{color: 'var(--danger-color)', textAlign: 'center', fontWeight: 'bold'}}>Insufficient balance.</p>
             )}
 
             <button 
@@ -147,7 +147,7 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
                 onClick={handleBet} 
                 disabled={isGamePaused || (isAuthenticated && (!hasSufficientBalance || totalSelections === 0))}
             >
-                {isGamePaused ? 'Jogo Pausado' : isAuthenticated ? 'Apostar Agora' : 'Conectar Carteira para Apostar'}
+                {isGamePaused ? 'Game Paused' : isAuthenticated ? 'Place Bet Now' : 'Connect Wallet to Bet'}
             </button>
         </div>
     );

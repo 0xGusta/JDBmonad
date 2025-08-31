@@ -13,11 +13,11 @@ const MyBets = ({ playerBets }) => {
 
     return (
         <div className="card my-bets-card">
-            <h3>Minhas Apostas na Rodada</h3>
+            <h3>My Bets This Round</h3>
             
             {sortedNumbers.length > 0 && (
                 <div className="bet-category">
-                    <h4>Números:</h4>
+                    <h4>Numbers:</h4>
                     <ul className="bets-list">
                         {sortedNumbers.map(num => (
                             <li key={num} className="bet-item number">
@@ -30,7 +30,7 @@ const MyBets = ({ playerBets }) => {
 
             {sortedAnimals.length > 0 && (
                 <div className="bet-category">
-                    <h4>Animais:</h4>
+                    <h4>Animals:</h4>
                     <ul className="bets-list">
                         {sortedAnimals.map(animal => (
                             <li key={animal} className="bet-item animal">
