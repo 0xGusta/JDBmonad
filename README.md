@@ -47,12 +47,11 @@ The backend consists of a Node.js server that automates and facilitates the oper
 
 This automation ensures that the game runs continuously and reliably without the need for manual intervention.
 
-## Smart Contracts
+## Smart Contract
 
 The logic of the Monanimal Game is encapsulated in two main smart contracts deployed on the Monad Testnet:
 
 * **MonanimalGame.sol**: This is the core contract of the game. It is responsible for managing betting rounds, storing bets, interacting with the Pyth oracle to obtain a random number, calculating the winners, and distributing the prizes.
-* **Leaderboard.sol**: A separate contract used to maintain a ranking of players based on the number of bets placed. This allows for a persistent and transparent leaderboard, independent of the main game logic.
 
 ## How to Run Locally
 
