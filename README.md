@@ -49,8 +49,6 @@ This automation ensures that the game runs continuously and reliably without the
 
 ## Smart Contract
 
-The logic of the Monanimal Game is encapsulated in two main smart contracts deployed on the Monad Testnet:
-
 * **MonanimalGame.sol**: This is the core contract of the game. It is responsible for managing betting rounds, storing bets, interacting with the Pyth oracle to obtain a random number, calculating the winners, and distributing the prizes.
 
 ## How to Run Locally
