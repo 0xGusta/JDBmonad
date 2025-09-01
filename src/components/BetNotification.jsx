@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../App.jsx';
 
 const BetNotification = ({ betEvent, onDismiss }) => {
+  const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
   const [username, setUsername] = useState(null);
 
@@ -40,7 +42,11 @@ const BetNotification = ({ betEvent, onDismiss }) => {
 
   const { player, totalBets } = betEvent;
   const displayName = username || `${player.substring(0, 6)}...${player.substring(player.length - 4)}`;
-  const message = `${displayName} just made ${totalBets} bet${totalBets > 1 ? 's' : ''}!`;
+  const message = t("bet_notification.bet_message", {
+    displayName,
+    totalBets,
+    s: totalBets > 1 ? 's' : ''
+  });
 
   return (
     <div className={`bet-notification-banner ${visible ? 'visible' : ''}`}>

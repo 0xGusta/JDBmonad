@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { formatEther } from "ethers";
+import { useLanguage } from '../App.jsx';
 
 const Accordion = ({ title, children }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +30,7 @@ async function fetchUsername(wallet) {
 }
 
 const History = ({ history }) => {
+  const { t, language } = useLanguage();
   const [usernames, setUsernames] = useState({});
 
   useEffect(() => {
@@ -55,7 +57,7 @@ const History = ({ history }) => {
   }, [history]);
 
   if (!history || history.length === 0) {
-    return <p>No raffles in history yet.</p>;
+    return <p>{t("history.no_raffles")}</p>;
   }
 
   const sortedHistory = [...history].sort((a, b) => Number(b.id) - Number(a.id));
@@ -66,93 +68,101 @@ const History = ({ history }) => {
         const pythBigInt = BigInt(raffle.pythRandomNumber);
         const winningNumberCalc = pythBigInt % 96n;
 
+        const dateOptions = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+        };
+
+        const formattedDate = new Intl.DateTimeFormat(language, dateOptions)
+                                .format(new Date(Number(raffle.timestamp) * 1000));
+
         return (
           <div key={raffle.id.toString()} className="history-item">
             <h4>
-              Raffle #{raffle.id.toString()} -{" "}
-              {new Date(Number(raffle.timestamp) * 1000).toLocaleString('en-US')}
+              #{raffle.id.toString() } - {formattedDate}
             </h4>
             <p>
-              <strong>Winning Number:</strong> {raffle.winningNumber.toString().padStart(2, '0')} |{" "}
-              <strong>Animal:</strong> {raffle.winningAnimal} |{" "}
-              <strong>Total Prize:</strong>{" "}
+              <strong>{t("history.winning_number")}</strong> {raffle.winningNumber.toString().padStart(2, '0')} |{" "}
+              <strong>{t("history.winning_animal")}</strong> {raffle.winningAnimal} |{" "}
+              <strong>{t("history.total_prize")}</strong>{" "}
               {new Intl.NumberFormat("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
-              }).format(Number(formatEther(raffle.totalPot)))}{" "}
-              MON
+              }).format(Number(formatEther(raffle.totalPot)))} MON
             </p>
 
             <div className="winners-section">
                 <div className="histdiv">
-                  <strong>Winners (Number):</strong>
+                  <strong>{t("history.winners_number")}</strong>
                   <ul>
                     {raffle.numberWinners.length > 0 ? (
                       raffle.numberWinners.map((winner, index) => (
                         <li key={`num-${index}`}>
-                          {usernames[winner.player] || formatAddress(winner.player)} - won{" "}
+                          {usernames[winner.player] || formatAddress(winner.player)} - {t("history.won")}{" "}
                           {new Intl.NumberFormat("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formatEther(winner.amountWon)))}{" "}
-                          MON
+                          }).format(Number(formatEther(winner.amountWon)))} MON
                         </li>
                       ))
                     ) : (
-                      <li>No one guessed the number.</li>
+                      <li>{t("history.no_number_winner")}</li>
                     )}
                   </ul>
                 </div>
     
                 <div className="histdiv">
-                  <strong>Winners (Animal):</strong>
+                  <strong>{t("history.winners_animal")}</strong>
                   <ul>
                     {raffle.animalWinners.length > 0 ? (
                       raffle.animalWinners.map((winner, index) => (
                         <li key={`animal-${index}`}>
-                          {usernames[winner.player] || formatAddress(winner.player)} - won{" "}
+                          {usernames[winner.player] || formatAddress(winner.player)} - {t("history.won")}{" "}
                           {new Intl.NumberFormat("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
-                          }).format(Number(formatEther(winner.amountWon)))}{" "}
-                          MON
+                          }).format(Number(formatEther(winner.amountWon)))} MON
                         </li>
                       ))
                     ) : (
-                      <li>No one guessed the animal.</li>
+                      <li>{t("history.no_animal_winner")}</li>
                     )}
                   </ul>
                 </div>
             </div>
             
-            <Accordion title="Verify Raffle Calculation">
+            <Accordion title={t("history.verify_calculation")}>
                 <div className="debug-steps">
-                    <p>The winning number is derived from the Pyth random number using the modulo operation (`%`).</p>
+                    <p>{t("history.verify_calculation.p1")}</p>
                     <ol>
                         <li>
-                            <strong>Pyth Number (Hex):</strong>
+                            <strong>{t("history.verify_calculation.step1")}</strong>
                             <span className="code-block">{raffle.pythRandomNumber.toString()}</span>
                         </li>
                         <li>
-                            <strong>Converted to Decimal:</strong>
+                            <strong>{t("history.verify_calculation.step2")}</strong>
                             <span className="code-block">{pythBigInt.toString()}</span>
                         </li>
                         <li>
-                            <strong>Calculation (Decimal % 96):</strong>
+                            <strong>{t("history.verify_calculation.step3")}</strong>
                             <span className="code-block">{pythBigInt.toString()} % 96 = {winningNumberCalc.toString()}</span>
                         </li>
                         <li>
-                            <strong>Final Result:</strong>
+                            <strong>{t("history.verify_calculation.step4")}</strong>
                             <span className="code-block final-result">{winningNumberCalc.toString().padStart(2, '0')}</span>
                         </li>
                     </ol>
                 </div>
             </Accordion>
 
-            <Accordion title="View All Bets from the Raffle">
+            <Accordion title={t("history.view_all_bets")}>
                 <div className="all-bets-container">
                     <div className="bet-category">
-                        <h4>Numbers Bet On:</h4>
+                        <h4>{t("history.numbers_bet_on")}</h4>
                         {raffle.numberBets.length > 0 ? (
                             <ul className="all-bets-list">
                                 {raffle.numberBets.map((bet, index) => (
@@ -164,10 +174,10 @@ const History = ({ history }) => {
                                     </li>
                                 ))}
                             </ul>
-                        ) : <p>No numbers were bet on.</p>}
+                        ) : <p>{t("history.no_numbers_bet")}</p>}
                     </div>
                     <div className="bet-category">
-                        <h4>Animals Bet On:</h4>
+                        <h4>{t("history.animals_bet_on")}</h4>
                          {raffle.animalBets.length > 0 ? (
                             <ul className="all-bets-list">
                                 {raffle.animalBets.map((bet, index) => (
@@ -179,7 +189,7 @@ const History = ({ history }) => {
                                     </li>
                                 ))}
                             </ul>
-                        ) : <p>No animals were bet on.</p>}
+                        ) : <p>{t("history.no_animals_bet")}</p>}
                     </div>
                 </div>
             </Accordion>

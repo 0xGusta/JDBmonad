@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { parseEther } from "ethers";
+import { useLanguage } from "../App.jsx";
 
 const animals = [
     { name: "Molandak", numbers: [0, 1, 2, 3, 4, 5], img: "/images/molandak.jpg" },
@@ -20,26 +21,38 @@ const animals = [
     { name: "Monavara", numbers: [90, 91, 92, 93, 94, 95], img: "/images/monavara.jpg" },
 ];
 
-
-const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGamePaused, onPlaceBet, isAuthenticated, addNotification, walletBalance }) => {
+const BettingGrid = ({
+    betPrice,
+    maxNumberBetsPerPlayer,
+    maxAnimalBetsPerPlayer,
+    numberBetsThisRound,
+    animalBetsThisRound,
+    playerBets,
+    isGamePaused,
+    disabled,
+    onPlaceBet,
+    isAuthenticated,
+    addNotification,
+    walletBalance
+}) => {
+    const { t } = useLanguage();
     const [selectedNumbers, setSelectedNumbers] = useState(new Set());
     const [selectedAnimals, setSelectedAnimals] = useState(new Set());
-
-    const totalSelections = selectedNumbers.size + selectedAnimals.size;
-    const canSelectMore = (betsThisRound + totalSelections) < maxBetsPerDraw;
+    const canSelectMoreNumbers = (numberBetsThisRound + selectedNumbers.size) < maxNumberBetsPerPlayer;
+    const canSelectMoreAnimals = (animalBetsThisRound + selectedAnimals.size) < maxAnimalBetsPerPlayer;
 
     const toggleNumber = (num) => {
         if (playerBets.numbers.has(num)) {
-            addNotification("You have already bet on this number.", "info");
+            addNotification(t("betting_grid.already_bet_number"), "info");
             return;
         }
-
         const newSelection = new Set(selectedNumbers);
         if (newSelection.has(num)) {
             newSelection.delete(num);
         } else {
-            if (!canSelectMore) {
-                addNotification(`You can select a maximum of ${maxBetsPerDraw} items per raffle.`, 'error');
+
+            if (!canSelectMoreNumbers) {
+                addNotification(t("betting_grid.max_number_selection_error", { max: maxNumberBetsPerPlayer }), "error");
                 return;
             }
             newSelection.add(num);
@@ -49,16 +62,16 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
 
     const toggleAnimal = (animalName) => {
         if (playerBets.animals.has(animalName)) {
-            addNotification("You have already bet on this animal.", "info");
+            addNotification(t("betting_grid.already_bet_animal"), "info");
             return;
         }
-
         const newSelection = new Set(selectedAnimals);
         if (newSelection.has(animalName)) {
             newSelection.delete(animalName);
         } else {
-             if (!canSelectMore) {
-                addNotification(`You can select a maximum of ${maxBetsPerDraw} items per raffle.`, 'error');
+
+            if (!canSelectMoreAnimals) {
+                addNotification(t("betting_grid.max_animal_selection_error", { max: maxAnimalBetsPerPlayer }), "error");
                 return;
             }
             newSelection.add(animalName);
@@ -71,22 +84,22 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
             onPlaceBet([], []);
             return;
         }
-        if (totalSelections === 0) {
-            addNotification("Select numbers or animals to bet on.", 'error');
+        if (selectedNumbers.size === 0 && selectedAnimals.size === 0) {
+            addNotification(t("betting_grid.select_to_bet"), 'error');
             return;
         }
-        
         const success = await onPlaceBet(Array.from(selectedNumbers), Array.from(selectedAnimals));
-        
         if (success) {
             setSelectedNumbers(new Set());
             setSelectedAnimals(new Set());
         }
     };
-    
+
+    const totalSelections = selectedNumbers.size + selectedAnimals.size;
     const totalCost = totalSelections * parseFloat(betPrice);
     const totalCostString = totalCost > 0 ? totalCost.toFixed(18) : "0";
     const hasSufficientBalance = isAuthenticated ? parseEther(walletBalance || '0') >= parseEther(totalCostString) : false;
+
     const getClassName = (type, value) => {
         if (type === 'animal') {
             if (playerBets.animals.has(value)) return 'already-bet-animal';
@@ -101,10 +114,16 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
 
     return (
         <div className="card game-card">
-            <h2 style={{textAlign: 'center', marginBottom: '0.5rem'}}>Place Your Bet</h2>
-            <p style={{textAlign: 'center', color: 'var(--text-secondary-color)'}}>
-                Price per selection: <strong>{parseFloat(betPrice).toFixed(2)} MON</strong> | Limit per raffle: <strong>{maxBetsPerDraw} selections</strong>
-            </p>
+            <h2 style={{ textAlign: 'center', marginBottom: '0.5rem' }}>{t("betting_grid.title")}</h2>
+            
+            <p style={{ textAlign: 'center', color: 'var(--text-secondary-color)' }} dangerouslySetInnerHTML={{
+                __html: t("betting_grid.price_limit", { 
+                    betPrice: parseFloat(betPrice).toFixed(2), 
+                    maxNumbers: maxNumberBetsPerPlayer,
+                    maxAnimals: maxAnimalBetsPerPlayer
+                })
+            }} />
+
             <div className="betting-grid">
                 {animals.map(animal => (
                     <div className={`animal-card ${getClassName('animal', animal.name)}`} key={animal.name}>
@@ -112,7 +131,7 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
                             src={animal.img}
                             alt={animal.name}
                             className="animal-image"
-                            onClick={() => !isGamePaused && toggleAnimal(animal.name)}
+                            onClick={() => !isGamePaused && !disabled && toggleAnimal(animal.name)}
                         />
                         <h3 className="animal-name">{animal.name}</h3>
                         <div className="number-grid">
@@ -120,8 +139,8 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
                                 <button
                                     key={num}
                                     className={`number-item ${getClassName('number', num)}`}
-                                    onClick={() => toggleNumber(num)}
-                                    disabled={isGamePaused || playerBets.numbers.has(num)}
+                                    onClick={() => !disabled && toggleNumber(num)}
+                                    disabled={isGamePaused || playerBets.numbers.has(num) || disabled}
                                 >
                                     {String(num).padStart(2, '0')}
                                 </button>
@@ -132,22 +151,35 @@ const BettingGrid = ({ betPrice, maxBetsPerDraw, betsThisRound, playerBets, isGa
             </div>
 
             <div className="bet-summary">
-                <p>Selections this raffle: <strong>{betsThisRound + totalSelections}/{maxBetsPerDraw}</strong></p>
-                <p>
-                    Total Cost (this bet): <strong>{new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalCost)} MON</strong>
-                </p>
+                <p dangerouslySetInnerHTML={{ __html: t("betting_grid.number_selections", { 
+                    current: numberBetsThisRound + selectedNumbers.size, 
+                    max: maxNumberBetsPerPlayer 
+                }) }} />
+                <p dangerouslySetInnerHTML={{ __html: t("betting_grid.animal_selections", { 
+                    current: animalBetsThisRound + selectedAnimals.size, 
+                    max: maxAnimalBetsPerPlayer 
+                }) }} />
+                <p dangerouslySetInnerHTML={{
+                    __html: t("betting_grid.cost", { totalCost: new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalCost) })
+                }} />
             </div>
 
             {!hasSufficientBalance && isAuthenticated && totalCost > 0 && (
-                <p style={{color: 'var(--danger-color)', textAlign: 'center', fontWeight: 'bold'}}>Insufficient balance.</p>
+                <p style={{ color: 'var(--danger-color)', textAlign: 'center', fontWeight: 'bold' }}>
+                    {t("betting_grid.insufficient_balance")}
+                </p>
             )}
 
-            <button 
-                className="bet-button" 
-                onClick={handleBet} 
-                disabled={isGamePaused || (isAuthenticated && (!hasSufficientBalance || totalSelections === 0))}
+            <button
+                className="bet-button"
+                onClick={handleBet}
+                disabled={isGamePaused || disabled || (isAuthenticated && (!hasSufficientBalance || totalSelections === 0))}
             >
-                {isGamePaused ? 'Game Paused' : isAuthenticated ? 'Place Bet Now' : 'Connect Wallet to Bet'}
+                {isGamePaused
+                    ? t("betting_grid.game_paused")
+                    : isAuthenticated
+                        ? t("betting_grid.button_place_bet")
+                        : t("betting_grid.button_connect_wallet")}
             </button>
         </div>
     );

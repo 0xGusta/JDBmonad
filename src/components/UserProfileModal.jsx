@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { parseEther, formatEther } from "ethers";
+import { parseEther } from "ethers";
+import { useLanguage } from '../App.jsx';
 
 const UserProfileModal = ({ isOpen, onClose, username, balance, address, onWithdraw, addNotification }) => {
+    const { t } = useLanguage();
     const [withdrawAddress, setWithdrawAddress] = useState('');
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const [walletBalance, setWalletBalance] = useState(balance);
@@ -13,8 +15,9 @@ const UserProfileModal = ({ isOpen, onClose, username, balance, address, onWithd
     if (!isOpen) return null;
 
     const handleWithdraw = () => {
-        if (!withdrawAddress || !withdrawAmount) {
-            addNotification('Please enter a valid address and amount.', 'error');
+        if (!withdrawAddress || !withdrawAmount || parseFloat(withdrawAmount) <= 0) {
+
+            addNotification(t('modal.user_profile.error_invalid_withdraw'), 'error');
             return;
         }
         onWithdraw(withdrawAddress, parseEther(withdrawAmount));
@@ -22,14 +25,16 @@ const UserProfileModal = ({ isOpen, onClose, username, balance, address, onWithd
 
     const handleCopyAddress = () => {
         navigator.clipboard.writeText(address);
-        addNotification('Address copied to clipboard!', 'success');
+
+        addNotification(t('modal.user_profile.success_copy'), 'success');
     };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2>Profile</h2>
+
+                    <h2>{t('modal.user_profile.title')}</h2>
                     <button onClick={onClose} className="close-button">&times;</button>
                 </div>
                 <div className="modal-body">
@@ -42,27 +47,27 @@ const UserProfileModal = ({ isOpen, onClose, username, balance, address, onWithd
                         </p>
                     </div>
                     <div className="top-up-instructions">
-                        <h4>How to add funds to your wallet:</h4>
-                        <p>Send MON from your main wallet to this address.</p>
-                        <p>{address} <button onClick={handleCopyAddress}>Copy</button></p>
+                        <h4>{t('modal.user_profile.how_to_add_funds')}</h4>
+                        <p>{t('modal.user_profile.p1')}</p>
+                        <p>{address} <button onClick={handleCopyAddress}>{t('modal.user_profile.copy')}</button></p>
                     </div>
                     <div className="withdraw-section">
-                        <h4>Withdraw MON</h4>
-                        <p>Destination wallet:</p>
+                        <h4>{t('modal.user_profile.withdraw_title')}</h4>
+                        <p>{t('modal.user_profile.destination_wallet')}</p>
                         <input
                             type="text"
-                            placeholder="Recipient Address"
+                            placeholder={t('modal.user_profile.placeholder_address')}
                             value={withdrawAddress}
                             onChange={(e) => setWithdrawAddress(e.target.value)}
                         />
-                        <p>Amount:</p>
+                        <p>{t('modal.user_profile.amount')}</p>
                         <input
                             type="number"
-                            placeholder="Amount in MON"
+                            placeholder={t('modal.user_profile.placeholder_amount')}
                             value={withdrawAmount}
                             onChange={(e) => setWithdrawAmount(e.target.value)}
                         />
-                        <button onClick={handleWithdraw}>Withdraw</button>
+                        <button onClick={handleWithdraw}>{t('modal.user_profile.withdraw_button')}</button>
                     </div>
                 </div>
             </div>

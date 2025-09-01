@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0xBae94ADbaC86ef68cAc00990f9b030Eb114C0cDA";
+export const CONTRACT_ADDRESS = "0x84efFC21412947c12B4fa37016cD5d535b5c9CB0";
 
 export const LEADERBOARD_ADDRESS = "0xceCBFF203C8B6044F52CE23D914A1bfD997541A4";
 
@@ -551,13 +551,7 @@ export const CONTRACT_ABI = [
 		"type": "function"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_initialDappWallet",
-				"type": "address"
-			}
-		],
+		"inputs": [],
 		"stateMutability": "nonpayable",
 		"type": "constructor"
 	},
@@ -762,7 +756,20 @@ export const CONTRACT_ABI = [
 				"type": "uint256"
 			}
 		],
-		"name": "MaxBetsChanged",
+		"name": "MaxAnimalBetsChanged",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "newLimit",
+				"type": "uint256"
+			}
+		],
+		"name": "MaxNumberBetsChanged",
 		"type": "event"
 	},
 	{
@@ -945,7 +952,20 @@ export const CONTRACT_ABI = [
 				"type": "uint256"
 			}
 		],
-		"name": "setMaxBetsPerDraw",
+		"name": "setMaxAnimalBets",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_newLimit",
+				"type": "uint256"
+			}
+		],
+		"name": "setMaxNumberBets",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -1048,6 +1068,25 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [
 			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "animalBetsPerPlayerInRound",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "string",
 				"name": "",
 				"type": "string"
@@ -1085,25 +1124,6 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [],
 		"name": "betPrice",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "betsPerPlayerInRound",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -1422,7 +1442,12 @@ export const CONTRACT_ABI = [
 					},
 					{
 						"internalType": "uint256",
-						"name": "maxBetsPerDraw",
+						"name": "maxNumberBetsPerPlayer",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "maxAnimalBetsPerPlayer",
 						"type": "uint256"
 					},
 					{
@@ -1541,7 +1566,20 @@ export const CONTRACT_ABI = [
 	},
 	{
 		"inputs": [],
-		"name": "maxBetsPerDraw",
+		"name": "maxAnimalBetsPerPlayer",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "maxNumberBetsPerPlayer",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -1568,6 +1606,25 @@ export const CONTRACT_ABI = [
 	{
 		"inputs": [],
 		"name": "nextDrawId",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "numberBetsPerPlayerInRound",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -1691,6 +1748,54 @@ export const CONTRACT_ABI = [
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "playerHasBetOnAnimalInRound",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "playerHasBetOnNumberInRound",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",

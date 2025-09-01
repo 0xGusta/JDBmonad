@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
+import { translations } from './translations';
 import { usePrivy, useCrossAppAccounts } from "@privy-io/react-auth";
 import { BrowserProvider, Contract, formatEther, WebSocketProvider, JsonRpcProvider, parseEther } from "ethers";
 import { CONTRACT_ADDRESS, CONTRACT_ABI, LEADERBOARD_ADDRESS, LEADERBOARD_ABI } from './contractInfo';
@@ -17,41 +18,7 @@ import Footer from './components/Footer.jsx';
 import HowItWorksModal from './components/HowItWorksModal.jsx';
 import MyBets from './components/MyBets.jsx';
 
-const PreLoginModal = ({ onClose, onLogin }) => (
-    <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-                <h2>Connect with Monad Games ID</h2>
-                <button onClick={onClose} className="close-button">&times;</button>
-            </div>
-            <div className="modal-body" style={{textAlign: 'center'}}>
-                <div className="admin-action">
-                    <h4>1. Create your Monad ID account</h4>
-                    <p style={{color: 'var(--text-secondary-color)'}}>It's fast, easy and necessary to play.</p>
-                    <a href="https://monad-games-id-site.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                         <button>Create Monad ID Account</button>
-                    </a>
-                </div>
-                <hr style={{margin: '2rem 0'}} />
-                <div className="admin-action">
-                    <h4>2. Already have an account?</h4>
-                     <p style={{color: 'var(--text-secondary-color)'}}>Proceed to connect with your wallet.</p>
-                    <button onClick={onLogin} className="primary">
-                        Connect Wallet
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-);
 
-const LoadingState = ({ message }) => (
-    <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-            <h2>{message}</h2>
-        </div>
-    </div>
-);
 
 function App() {
     const { ready, authenticated, user, login, logout, getEthereumProvider } = usePrivy();
@@ -70,13 +37,21 @@ function App() {
     const [leaderboardContract, setLeaderboardContract] = useState(null);
 
     const [betPrice, setBetPrice] = useState("0");
-    const [maxBetsPerDraw, setMaxBetsPerDraw] = useState(0);
     const [drawHistory, setDrawHistory] = useState([]);
     const [raffleHistory, setRaffleHistory] = useState([]);
     const [currentPot, setCurrentPot] = useState("0");
     const [bonusPot, setBonusPot] = useState("0");
     const [isGamePaused, setIsGamePaused] = useState(false);
-    const [betsThisRound, setBetsThisRound] = useState(0);
+    const [maxNumberBets, setMaxNumberBets] = useState(0);
+    const [maxAnimalBets, setMaxAnimalBets] = useState(0);
+    const [numberBetsThisRound, setNumberBetsThisRound] = useState(0);
+    const [animalBetsThisRound, setAnimalBetsThisRound] = useState(0);
+    const [contractStatus, setContractStatus] = useState({
+        animalHitPercentage: 0,
+        numberHitPercentage: 0,
+        dappFeePercentage: 0,
+    });
+
     const [playerBets, setPlayerBets] = useState({ numbers: new Set(), animals: new Set() });
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,6 +63,15 @@ function App() {
     const [latestBet, setLatestBet] = useState(null);
     
     const isHandlingAuth = useRef(false);
+    const [language, setLanguage] = useState(() => {
+        return localStorage.getItem('language') || 'en';
+    });
+
+
+    const t = (key, params = {}) => {
+        const text = translations[language][key] || translations.en[key] || key;
+        return Object.keys(params).reduce((str, k) => str.replace(`{${k}}`, params[k]), text);
+    };
 
     const addNotification = useCallback((message, type = 'info') => {
         const id = Date.now();
@@ -98,28 +82,108 @@ function App() {
         setIsPreLoginModalOpen(false);
         login();
     };
+
+    const savedLanguage = localStorage.getItem('language') || 'en';
+    const [toggle, setToggle] = useState(savedLanguage === 'pt');
+
+    const handleToggleLanguage = () => {
+        const newLang = toggle ? 'en' : 'pt';
+        setLanguage(newLang);
+        localStorage.setItem('language', newLang);
+        setToggle(!toggle);
+    };
+
+    useEffect(() => {
+        setToggle(language === 'pt');
+    }, [language]);
+
+    const PreLoginModal = ({ onClose, onLogin }) => (
+        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+            <h2>{t("prelogin.title")}</h2>
+            <button onClick={onClose} className="close-button">
+                &times;
+            </button>
+            </div>
+            <div className="modal-body" style={{ textAlign: "center" }}>
+            <div className="admin-action">
+                <h4>{t("prelogin.step1_title")}</h4>
+                <p style={{ color: "var(--text-secondary-color)" }}>
+                {t("prelogin.step1_p1")}
+                </p>
+                <a
+                href="https://monad-games-id-site.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none" }}
+                >
+                <button>{t("prelogin.step1_button")}</button>
+                </a>
+            </div>
+
+            <hr style={{ margin: "2rem 0" }} />
+
+            <div className="admin-action">
+                <h4>{t("prelogin.step2_title")}</h4>
+                <p style={{ color: "var(--text-secondary-color)" }}>
+                {t("prelogin.step2_p1")}
+                </p>
+                <button onClick={onLogin} className="primary">
+                {t("prelogin.step2_button")}
+                </button>
+            </div>
+            </div>
+        </div>
+        </div>
+    );
+
+    const LoadingState = ({ message }) => (
+        <div className="card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                <h2>{message}</h2>
+            </div>
+        </div>
+    );
     
     const loadPublicData = useCallback(async () => {
         if (!readOnlyContract) return;
         try {
-            const [status, history] = await Promise.all([
-                readOnlyContract.getFullStatus(),
-                readOnlyContract.getDrawHistory().catch(e => {
-                    console.error("Failed to load getDrawHistory, returning empty array.", e);
-                    return [];
-                }),
+            const [
+            status,
+            history,
+            numberHitPct,
+            animalHitPct,
+            dappFeePct,
+            ] = await Promise.all([
+            readOnlyContract.getFullStatus(),
+            readOnlyContract.getDrawHistory().catch(e => {
+                console.error("Failed to load getDrawHistory, returning empty array.", e);
+                return [];
+            }),
+            readOnlyContract.numberHitPercentage(),
+            readOnlyContract.animalHitPercentage(),
+            readOnlyContract.dappFeePercentage(),
             ]);
+
             setBetPrice(formatEther(status.betPrice));
-            setMaxBetsPerDraw(Number(status.maxBetsPerDraw));
+            setMaxNumberBets(Number(status.maxNumberBetsPerPlayer));
+            setMaxAnimalBets(Number(status.maxAnimalBetsPerPlayer));
             setIsGamePaused(status.isPaused);
             setRaffleHistory([...history].sort((a, b) => Number(b.id) - Number(a.id)));
             setCurrentPot(formatEther(status.currentPot));
             setBonusPot(formatEther(status.bonusPot));
+
+            setContractStatus({
+            numberHitPercentage: Number(numberHitPct ?? 0),
+            animalHitPercentage: Number(animalHitPct ?? 0),
+            dappFeePercentage:   Number(dappFeePct ?? 0),
+            });
         } catch (error) {
             console.error("Failed to load public data:", error);
             setInitializationError("Unable to load game data.");
         }
-    }, [readOnlyContract]);
+        }, [readOnlyContract]);
 
     const loadPrivateData = useCallback(async () => {
         if (!provider || !gameWalletAddress || !contract) return;
@@ -127,12 +191,18 @@ function App() {
         try {
             const balance = await provider.getBalance(gameWalletAddress);
             setWalletBalance(formatEther(balance));
-
-            const [isAdminStatus, prize, betsInRound, myBetsResult] = await Promise.all([
-            contract.admins(gameWalletAddress),
-            contract.pendingWithdrawals(gameWalletAddress),
-            contract.betsPerPlayerInRound(gameWalletAddress),
-            contract.getPlayerBets(gameWalletAddress)
+            const [
+                isAdminStatus, 
+                prize, 
+                myBetsResult,
+                numbersCount,
+                animalsCount,
+            ] = await Promise.all([
+                contract.admins(gameWalletAddress),
+                contract.pendingWithdrawals(gameWalletAddress),
+                contract.getPlayerBets(gameWalletAddress),
+                contract.numberBetsPerPlayerInRound(gameWalletAddress),
+                contract.animalBetsPerPlayerInRound(gameWalletAddress),
             ]);
 
             const numbersRaw = Array.from(myBetsResult?.numbers ?? myBetsResult?.[0] ?? []);
@@ -142,13 +212,16 @@ function App() {
             const animalsArray = animalsRaw.map(a => String(a));
 
             setPlayerBets({
-            numbers: new Set(numbersArray),
-            animals: new Set(animalsArray)
+                numbers: new Set(numbersArray),
+                animals: new Set(animalsArray)
             });
 
             setIsAdmin(isAdminStatus);
             setPendingPrize(formatEther(prize));
-            setBetsThisRound(Number(betsInRound));
+            setNumberBetsThisRound(Number(numbersCount));
+            setAnimalBetsThisRound(Number(animalsCount));
+
+
         } catch (error) {
             console.error("Failed to load user data:", error);
         }
@@ -317,14 +390,17 @@ function App() {
             return false;
         }
         
-        const totalBetCount = numbers.length + animals.length;
-
-        if (betsThisRound + totalBetCount > maxBetsPerDraw) {
-            addNotification(`Limit of ${maxBetsPerDraw} bets per raffle exceeded. You have already made ${betsThisRound} bet(s).`, 'error');
+        if (numberBetsThisRound + numbers.length > maxNumberBets) {
+            addNotification(`Limit of ${maxNumberBets} number bets exceeded. You have already made ${numberBetsThisRound} number bet(s).`, 'error');
+            return false;
+        }
+        if (animalBetsThisRound + animals.length > maxAnimalBets) {
+            addNotification(`Limit of ${maxAnimalBets} animal bets exceeded. You have already made ${animalBetsThisRound} animal bet(s).`, 'error');
             return false;
         }
         
         try {
+            const totalBetCount = numbers.length + animals.length;
             const price = parseEther(betPrice);
             const totalValue = BigInt(totalBetCount) * price;
 
@@ -408,80 +484,117 @@ function App() {
     };
     
     const renderContent = () => {
-        if (initializationError) return <div className="card error-card"><h2>Error</h2><p>{initializationError}</p></div>;
-        if (!readOnlyContract || !leaderboardContract) return <LoadingState message="Loading data..." />;
+        if (initializationError) {
+            return (
+            <div className="card error-card">
+                <h2>{t("error.title")}</h2>
+                <p>{initializationError}</p>
+            </div>
+            );
+        }
+
+        if (!readOnlyContract || !leaderboardContract) {
+            return <LoadingState message={t("loading.data")} />;
+        }
 
         const totalPotValue = parseFloat(currentPot) + parseFloat(bonusPot);
 
         return (
             <>
-                {authenticated && parseFloat(walletBalance) < 0.3 && (
-                    <div className="card warning-card">
-                        <h3>Warning</h3>
-                        <p>Your balance is low ({parseFloat(walletBalance).toFixed(2)} MON). Top up to continue playing.</p>
-                        <button onClick={() => setIsProfileModalOpen(true)}>Top Up</button>
-                    </div>
-                )}
-                {authenticated && parseFloat(pendingPrize) > 0 && (
-                    <div className="card withdraw-card">
-                        <h3>You have a prize to withdraw!</h3>
-                        <p className="pot-amount">
-                          {parseFloat(pendingPrize).toLocaleString("en-US", { 
-                             minimumFractionDigits: 2, 
-                            maximumFractionDigits: 2 
-                           })} MON
-                        </p>
-                        <button onClick={handleWithdraw}>Withdraw My Prize</button>
-                    </div>
-                )}
-                {isGamePaused && (
-                    <div className="card danger-card">
-                        <h3>Game Paused</h3>
-                        <p>The game is temporarily paused by an administrator. New bets are not allowed at this time.</p>
-                    </div>
-                )}
-                <div className="stats-grid">
-                    <div className="card pot-display">
-                        <h2>Current Round Prize</h2>
-                        <p className="pot-amount">
-                            {new Intl.NumberFormat("en-US", { 
-                                minimumFractionDigits: 2, 
-                                maximumFractionDigits: 2 
-                            }).format(totalPotValue)} MON
-                        </p>
-                        
-                    </div>
-                    <LastDraw lastDraw={raffleHistory[0]} />
+            {authenticated && parseFloat(walletBalance) < 1 && (
+                <div className="card warning-card">
+                <h3>{t("warning.title")}</h3>
+                <p>
+                    {t("warning.p1", {
+                    balance: parseFloat(walletBalance).toFixed(2),
+                    })}
+                </p>
+                <button onClick={() => setIsProfileModalOpen(true)}>
+                    {t("warning.button")}
+                </button>
                 </div>
-                <BettingGrid 
-                    betPrice={betPrice}
-                    maxBetsPerDraw={maxBetsPerDraw}
-                    betsThisRound={betsThisRound}
-                    playerBets={playerBets}
-                    isGamePaused={isGamePaused}
-                    onPlaceBet={handlePlaceBet} 
-                    isAuthenticated={authenticated}
-                    addNotification={addNotification}
-                    walletBalance={walletBalance}
-                />
-                
-                <MyBets playerBets={playerBets} />
+            )}
 
-                <Leaderboard 
-                    provider={readOnlyProvider} 
-                    gameContract={readOnlyContract}
-                    leaderboardContract={leaderboardContract} 
-                    yourAddress={gameWalletAddress}
-                />
-                <div className="card history-card">
-                    <h3>Detailed Raffle History</h3>
-                    <History history={raffleHistory} />
+            {authenticated && parseFloat(pendingPrize) > 0 && (
+                <div className="card withdraw-card">
+                <h3>{t("withdraw_card.title")}</h3>
+                <p className="pot-amount">
+                    {parseFloat(pendingPrize).toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                    })}{" "}
+                    MON
+                </p>
+                <button onClick={handleWithdraw}>
+                    {t("withdraw_card.button")}
+                </button>
                 </div>
+            )}
+
+            {isGamePaused && (
+                <div className="card danger-card">
+                <h3>{t("paused.title")}</h3>
+                <p>{t("paused.description")}</p>
+                </div>
+            )}
+
+            <div className="stats-grid">
+                <div className="card pot-display">
+                <h2>{t("stats_grid.pot_title")}</h2>
+                <p className="pot-amount">
+                    {new Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                    }).format(totalPotValue)}{" "}
+                    MON
+                </p>
+                <h2>{t("stats_grid.draw_time")}</h2>
+                <p className="percentagesinfo">
+                    {t("stats_grid.draw_percentages", {
+                        animal: contractStatus.animalHitPercentage ?? 0,
+                        number: contractStatus.numberHitPercentage ?? 0,
+                        dapp:   contractStatus.dappFeePercentage ?? 0,
+                    })}
+                </p>
+                </div>
+
+                <LastDraw lastDraw={raffleHistory[0]} />
+            </div>
+
+            <BettingGrid
+                betPrice={betPrice}
+                maxNumberBetsPerPlayer={maxNumberBets}
+                maxAnimalBetsPerPlayer={maxAnimalBets}
+                numberBetsThisRound={numberBetsThisRound}
+                animalBetsThisRound={animalBetsThisRound}
+                playerBets={playerBets}
+                isGamePaused={isGamePaused}
+                disabled={!ready || !authenticated}
+                onPlaceBet={handlePlaceBet}
+                isAuthenticated={authenticated}
+                addNotification={addNotification}
+                walletBalance={walletBalance}
+            />
+
+            <MyBets playerBets={playerBets} />
+
+            <Leaderboard
+                provider={readOnlyProvider}
+                gameContract={readOnlyContract}
+                leaderboardContract={leaderboardContract}
+                yourAddress={gameWalletAddress}
+            />
+
+            <div className="card history-card">
+                <h3>{t("history.title")}</h3>
+                <History history={raffleHistory} />
+            </div>
             </>
         );
-    };
+        };
 
     return (
+        <LanguageContext.Provider value={{ language, setLanguage, t }}>
         <div className="container">
             {isPreLoginModalOpen && <PreLoginModal onClose={() => setIsPreLoginModalOpen(false)} onLogin={handleLogin} />}
             <BetNotification betEvent={latestBet} onDismiss={() => setLatestBet(null)} />
@@ -496,33 +609,63 @@ function App() {
                 ))}
             </div>
             <header>
-                {/* <h1>
-                  <h1>
-                      <img src="images/monanimallogo.svg" alt="JDB Logo" width={200} height={60} />
-                  </h1>
-                </h1> */}
                 <div className="header-controls">
                     <div className="logo-container">
-                        <img src="images/monanimallogo.svg" alt="JDB Logo" width={200} height={60} />
+                    <img src="images/monanimallogo.svg" alt="JDB Logo" width={200} height={60} />
                     </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {!ready ? (
-                        <button disabled>Loading...</button>
+                        <button disabled>{t("header.loading")}</button>
                     ) : !authenticated ? (
-                        <button onClick={() => setIsPreLoginModalOpen(true)}>Login with Monad Games ID</button>
+                        <button onClick={() => setIsPreLoginModalOpen(true)}>{t("header.login")}</button>
                     ) : (
-                        <> <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                            <button className="how-it-works-button" onClick={() => setIsHowItWorksModalOpen(true)}>
-                                How It Works?
-                            </button>
-                            <div className="user-profile" onClick={() => setIsProfileModalOpen(true)}>
-                                {username === null ? "..." : username}
-                            </div>
-                            {isAdmin && <button className="admin-button" onClick={() => setIsModalOpen(true)}>Admin</button>}
-                            <button onClick={logout}>Logout</button></div>
+                        <>
+                        <button className="how-it-works-button" onClick={() => setIsHowItWorksModalOpen(true)}>
+                            {t("header.how_it_works")}
+                        </button>
+                        <div className="user-profile" onClick={() => setIsProfileModalOpen(true)}>
+                            {username ?? "..."}
+                        </div>
+                        {isAdmin && <button className="admin-button" onClick={() => setIsModalOpen(true)}>Admin</button>}
+                        <button onClick={logout}>Logout</button>
                         </>
                     )}
+                    
+                    <div 
+                        className="language-toggle" 
+                        onClick={handleToggleLanguage} 
+                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                    >
+                        <span style={{ fontWeight: toggle ? 'normal' : 'bold' }}>
+                        <img src="https://flagicons.lipis.dev/flags/4x3/us.svg" alt="EN" width={20} height={20} />
+                        </span>
+                        <div style={{
+                        width: '40px',
+                        height: '20px',
+                        background:'#7c3aed',
+                        borderRadius: '10px',
+                        position: 'relative',
+                        transition: 'background 0.3s'
+                        }}>
+                        <div style={{
+                            width: '18px',
+                            height: '18px',
+                            background: '#fff',
+                            borderRadius: '50%',
+                            position: 'absolute',
+                            top: '1px',
+                            left: toggle ? '20px' : '1px',
+                            transition: 'left 0.3s'
+                        }}></div>
+                        </div>
+                        <span style={{ fontWeight: toggle ? 'bold' : 'normal' }}>
+                        <img src="https://flagicons.lipis.dev/flags/4x3/br.svg" alt="PT" width={20} height={20} />
+                        </span>
+                    </div>
+                    </div>
                 </div>
-            </header>
+                </header>
             <HowItWorksModal 
                 isOpen={isHowItWorksModalOpen} 
                 onClose={() => setIsHowItWorksModalOpen(false)} 
@@ -552,7 +695,12 @@ function App() {
             </main>
              <Footer />
         </div>
+        </LanguageContext.Provider>
     );
 }
 
 export default App;
+
+export const LanguageContext = createContext();
+
+export const useLanguage = () => useContext(LanguageContext);
