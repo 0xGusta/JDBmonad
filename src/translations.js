@@ -207,6 +207,7 @@ export const translations = {
         "history.no_raffles": "Nenhum sorteio ainda.",
         "history.raffle_id": "Sorteio #{raffleId} - {date}",
         "history.winning_number": "Número Vencedor:",
+        "history.winning_animal": "Monanimal Vencedor:",
         "history.animal": "Animal:",
         "history.total_prize": "Prêmio Total:",
         "history.winners_number": "Vencedores (Número):",
