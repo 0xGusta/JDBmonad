@@ -174,7 +174,7 @@ const History = ({ history }) => {
                                     </li>
                                 ))}
                             </ul>
-                        ) : <p>{t("history.no_numbers_bet")}</p>}
+                        ) : <p>{t("history.no_number_bets")}</p>}
                     </div>
                     <div className="bet-category">
                         <h4>{t("history.animals_bet_on")}</h4>
@@ -189,7 +189,7 @@ const History = ({ history }) => {
                                     </li>
                                 ))}
                             </ul>
-                        ) : <p>{t("history.no_animals_bet")}</p>}
+                        ) : <p>{t("history.no_animal_bets")}</p>}
                     </div>
                 </div>
             </Accordion>
