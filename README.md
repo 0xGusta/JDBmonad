@@ -43,6 +43,8 @@ The backend consists of a Node.js server that automates and facilitates the oper
 * **Result Processing**: The server listens for the `RandomNumberFulfilled` event from the smart contract. Upon receiving this event, it calls the `processDraw` function to finalize the round, calculate the winners, and make the prizes available for withdrawal.
 * **Leaderboard Integration**: The backend listens for `BetsPlaced` events from the game contract. When a new bet is detected, it updates a separate leaderboard smart contract, ensuring that the ranking of the most active players is always up to date.
 
+* [Backend Repo Here](https://github.com/0xGusta/JDB-Backend)
+
 This automation ensures that the game runs continuously and reliably without the need for manual intervention.
 
 ## Smart Contracts
