@@ -1,6 +1,6 @@
 # Monanimal Game
 
-Monanimal Game is a decentralized and transparent lottery game built on the Monad blockchain. Players can bet on numbers (0-95) or "Monanimals" in each round. A Pyth Network oracle is used to generate a random number that determines the winner, ensuring a fair and tamper-proof result.
+Monanimal Game is a decentralized and transparent lottery game built on the Monad blockchain. Players can bet on numbers (0-95) or Monanimals in each round. A Pyth Network oracle is used to generate a random number that determines the winner, ensuring a fair and tamper-proof result.
 
 ## How it Works
 
