@@ -4,8 +4,15 @@ export const monadTestnet = {
   nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
   rpcUrls: {
     default: {
-      http: ['https://testnet-rpc.monad.xyz'],
-      webSocket: ['wss://testnet-rpc.monad.xyz']
+      http: [
+        'https://rpc.ankr.com/monad_testnet',
+        'https://testnet-rpc.monad.xyz',
+        'https://monad-testnet.drpc.org'
+      ],
+      webSocket: [
+        'wss://testnet-rpc.monad.xyz',
+        'wss://monad-testnet.drpc.org'
+      ]
     }
   },
   blockExplorers: { default: { name: 'MonVision', url: 'https://testnet.monadexplorer.com/' } },
