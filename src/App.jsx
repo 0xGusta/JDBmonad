@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { translations } from './translations';
 import { usePrivy, useCrossAppAccounts } from "@privy-io/react-auth";
-import { BrowserProvider, Contract, formatEther, WebSocketProvider, JsonRpcProvider, parseEther } from "ethers";
+import { BrowserProvider, Contract, formatEther, WebSocketProvider, FallbackProvider, JsonRpcProvider, parseEther } from "ethers";
 import { CONTRACT_ADDRESS, CONTRACT_ABI, LEADERBOARD_ADDRESS, LEADERBOARD_ABI } from './contractInfo';
 import { monadTestnet } from './monadChain.js';
 import './App.css';
@@ -31,7 +31,12 @@ function App() {
     const [pendingPrize, setPendingPrize] = useState("0");
     
     const [provider, setProvider] = useState(null);
-    const [readOnlyProvider] = useState(new JsonRpcProvider(monadTestnet.rpcUrls.default.http[0]));
+    const [readOnlyProvider] = useState(
+        new FallbackProvider(
+            monadTestnet.rpcUrls.default.http.map(url => new JsonRpcProvider(url)),
+            monadTestnet.id
+        )
+    );
     const [contract, setContract] = useState(null);
     const [readOnlyContract, setReadOnlyContract] = useState(null);
     const [leaderboardContract, setLeaderboardContract] = useState(null);
@@ -614,7 +619,7 @@ function App() {
                     <img src="images/monanimallogo.svg" alt="JDB Logo" width={200} height={60} />
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div className="header-btns" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {!ready ? (
                         <button disabled>{t("header.loading")}</button>
                     ) : !authenticated ? (
