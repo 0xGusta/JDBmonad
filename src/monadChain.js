@@ -6,8 +6,8 @@ export const monadTestnet = {
     default: {
       http: [
         'https://rpc.ankr.com/monad_testnet',
-        'https://testnet-rpc.monad.xyz',
-        'https://monad-testnet.drpc.org'
+        'https://testnet-rpc.monad.xyz'
+        //'https://monad-testnet.drpc.org' RCP HORRIVEL
       ],
       webSocket: [
         'wss://testnet-rpc.monad.xyz',
