@@ -11,12 +11,15 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
   const { t } = useLanguage();
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchLeaderboard = useCallback(async (isUpdate = false) => {
-    if (!isUpdate) setLoading(true);
+  const fetchLeaderboard = useCallback(async () => {
+    setLoading(true);
 
     try {
-      const response = await fetch(`/api/leaderboard?page=1&gameId=${JDB_GAME_ID}&sortBy=transactions`);
+      const response = await fetch(`/api/leaderboard?page=${currentPage}&gameId=${JDB_GAME_ID}&sortBy=transactions`);
       if (!response.ok) throw new Error(`Failed to fetch leaderboard data: ${response.statusText}`);
       
       const apiResult = await response.json();
@@ -27,13 +30,14 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
       }));
       
       setLeaderboardData(formattedData);
+      setTotalPages(apiResult.pagination.totalPages);
 
     } catch (error) {
       console.error("Error building leaderboard via API:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage]);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -49,7 +53,7 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
     
     const handleUpdate = () => { 
       console.log("PlayerDataUpdated event received, updating leaderboard via API...");
-      setTimeout(() => fetchLeaderboard(true), 2000);
+      setTimeout(() => fetchLeaderboard(), 2000);
     };
 
     eventContract.on(filter, handleUpdate);
@@ -59,6 +63,14 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
       wsProvider.destroy().catch(err => console.error("Error closing WebSocket:", err));
     };
   }, [leaderboardContract, fetchLeaderboard]);
+  
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
 
   return (
     <div className="card leaderboard-card">
@@ -66,27 +78,43 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
       {loading ? (
         <p>{t("leaderboard.loading")}</p>
       ) : leaderboardData.length > 0 ? (
-        <table className="leaderboard-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>{t("leaderboard.player")}</th>
-              <th>{t("leaderboard.bets")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboardData.map((player, index) => (
-              <tr 
-                key={player.address} 
-                className={player.address.toLowerCase() === yourAddress?.toLowerCase() ? 'your-rank' : ''}
-              >
-                <td>{index + 1}</td>
-                <td>{player.username}</td>
-                <td>{player.transactions}</td>
+        <>
+          <table className="leaderboard-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{t("leaderboard.player")}</th>
+                <th>{t("leaderboard.bets")}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {leaderboardData.map((player, index) => {
+                const rank = (currentPage - 1) * 10 + index + 1;
+                return (
+                  <tr 
+                    key={player.address} 
+                    className={player.address.toLowerCase() === yourAddress?.toLowerCase() ? 'your-rank' : ''}
+                  >
+                    <td>{rank}</td>
+                    <td>{player.username}</td>
+                    <td>{player.transactions}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div className="leaderboard-pagination">
+            <button onClick={handlePrevPage} disabled={currentPage === 1}>
+              &larr;
+            </button>
+            <span>
+               {currentPage} / {totalPages}
+            </span>
+            <button onClick={handleNextPage} disabled={currentPage === totalPages}>
+              &rarr;
+            </button>
+          </div>
+        </>
       ) : (
         <p>{t("leaderboard.no_bets")}</p>
       )}
@@ -95,4 +123,3 @@ const Leaderboard = ({ leaderboardContract, yourAddress }) => {
 };
 
 export default Leaderboard;
-
