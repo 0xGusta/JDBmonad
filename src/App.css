@@ -507,6 +507,14 @@ input:focus {
   border-left: 3px solid var(--accent-color);
 }
 
+.leaderboard-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
 .spinner-overlay {
   position: fixed;
   top: 0;
