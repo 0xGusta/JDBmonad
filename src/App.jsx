@@ -273,7 +273,7 @@ function App() {
                 const walletAddress = crossAppAccount.embeddedWallets[0].address;
                 
                 try {
-                    const response = await fetch(`https://monad-games-id-site.vercel.app/api/check-wallet?wallet=${walletAddress}`);
+                    const response = await fetch(`https://www.monadclip.fun/api/check-wallet?wallet=${walletAddress}`);
                     const data = await response.json();
                     if (!data.hasUsername) {
                         addNotification('Username not found. Create one on Monad Games ID.', 'error');
