@@ -19,7 +19,7 @@ const formatAddress = (address) => `${address.substring(0, 6)}...${address.subst
 
 async function fetchUsername(wallet) {
   try {
-    const res = await fetch(`https://monad-games-id-site.vercel.app/api/check-wallet?wallet=${wallet}`);
+    const res = await fetch(`https://www.monadclip.fun/api/check-wallet?wallet=${wallet}`);
     if (!res.ok) return null;
     const data = await res.json();
     return data.hasUsername ? data.user.username : null;
