@@ -482,6 +482,10 @@ input:focus {
   margin-top: 1rem;
 }
 
+.leaderboard-card {
+  display:none;  
+}
+   
 .leaderboard-table th,
 .leaderboard-table td {
   padding: 0.75rem 1rem;
